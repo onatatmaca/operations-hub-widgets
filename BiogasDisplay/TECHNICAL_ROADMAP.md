@@ -1,13 +1,99 @@
 # BiogasDisplay Custom Plugin - Technical Roadmap
 
+> **⚠️ IMPORTANT: DOCUMENTATION POLICY**
+> **NO OTHER .md FILES should be created in this project.**
+> **ALL documentation, updates, changes, and technical notes MUST be added to THIS file.**
+> **After every update, changes must be clearly documented here with date and description.**
+
+---
+
+## 📋 Recent Updates Log
+
+### Update: 2024-12-03 - Major Feature Implementation
+**Completed by:** Claude Code AI
+
+**Changes Made:**
+1. ✅ **Fixed Graph Plotting Issue**
+   - Replaced custom canvas drawing with Chart.js library
+   - X-axis, Y-axis, and plot lines now fully visible and functional
+   - Added responsive, interactive tooltips
+   - Professional styling with proper colors and scaling
+
+2. ✅ **Implemented Dual Live Data Sources**
+   - Added support for Historian (old BGAs) and OPC UA (new BGAs)
+   - manifest.json: Added `liveDataHistorian` and `liveDataOPCUA` properties
+   - main.js: Auto-detection of which source is configured
+   - Only ONE source needs to be configured per widget instance
+
+3. ✅ **Fixed Value=0 Click Issue**
+   - Changed validation from `!currentValue` to explicit undefined/null check
+   - Rows with value=0 can now be clicked to show historical data
+
+4. ✅ **Created Excel-to-JSON Converter System**
+   - Python script: `convert_excel_to_json.py`
+   - Batch file: `BUILD_EXE.bat` for creating standalone executable
+   - README.md: Complete usage instructions
+   - Parser now correctly handles all 44 tags (was missing 5)
+
+5. ✅ **Fixed Excel Parser**
+   - Now includes rows even if R&I ID is missing
+   - Requirement: At least one field (description, unit, or variable) present
+   - All 44 tags now parsed correctly
+
+**Files Modified:**
+- `BiogasDisplay/manifest.json` - Added Chart.js, dual data sources
+- `BiogasDisplay/main.js` - Chart.js integration, dual source logic, fixed validation
+- `BiogasDisplay/datasets/Erfstadt_v1.json` - Updated with all 44 tags
+- `BiogasDisplay/datasets/convert_excel_to_json.py` - New converter script
+- `BiogasDisplay/datasets/BUILD_EXE.bat` - New build script
+- `BiogasDisplay/datasets/README.md` - New usage documentation
+
+**Tag Count Verification:**
+- ROHWARE: 2 tags
+- FERTIGWARE & PUMPENSUMPF: 2 tags
+- DRUCK & TEMPERATUR: 3 tags
+- HYGIENISIERUNG 1: 3 tags
+- HYGIENISIERUNG 2: 3 tags
+- HYGIENISIERUNG 3: 3 tags
+- PUMPEN: 10 tags
+- FETTLAGERTANKS: 12 tags
+- TAGESMENGEN & DURCHFLUSS: 6 tags
+- **Total: 44 tags ✓**
+
+**Pending:**
+- [x] Add BGA Name property to select which Excel/JSON file to use (COMPLETED 2024-12-03)
+- [ ] Implement dynamic HTML generation based on selected JSON
+- [ ] Test Chart.js with real Historian data
+
+### Update: 2024-12-03 - Added BGA Name Property
+**Completed by:** Claude Code AI
+
+**Changes Made:**
+1. ✅ **Added BGA Name Property to manifest.json**
+   - Property name: `bgaName`
+   - Type: String input field
+   - Default value: "Erfstadt_v1"
+   - Description: "Enter the name of the Excel/JSON file without extension"
+   - User can now specify which BGA configuration to load
+
+**Files Modified:**
+- `BiogasDisplay/manifest.json` - Added bgaName property with text input
+- `BiogasDisplay/TECHNICAL_ROADMAP.md` - Updated documentation
+
+**Next Steps:**
+- main.js needs to read bgaName property and load corresponding JSON
+- Dynamically generate HTML based on loaded JSON data
+
+---
+
 ## Project Overview
 
-**Platform:** GE Digital Operations Hub (formerly Proficy Operations Hub)  
-**Type:** Custom EMBED API Plugin  
-**Purpose:** Real-time biogas plant monitoring dashboard with historical data visualization  
-**Target Environment:** https://ophub.info-matic.de/run/?app_name=Erftstadt&page_name=Dashboard  
-**Historian:** GE iFIX Historian (STAT6 - Erfstadt Historian)  
-**Technology Stack:** JavaScript (ES5), jQuery, HTML5 Canvas, CSS3
+**Platform:** GE Digital Operations Hub (formerly Proficy Operations Hub)
+**Type:** Custom EMBED API Plugin
+**Purpose:** Real-time biogas plant monitoring dashboard with historical data visualization
+**Target Environment:** https://ophub.info-matic.de/run/?app_name=Erftstadt&page_name=Dashboard
+**Historian:** GE iFIX Historian (STAT6 - Erfstadt Historian)
+**Technology Stack:** JavaScript (ES5), jQuery, Chart.js 3.9.1, CSS3
 
 ---
 

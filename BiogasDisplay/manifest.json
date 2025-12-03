@@ -20,6 +20,12 @@
   "schema": {
     "draggable": true,
     "JSONSchema": {
+      "bgaName": {
+        "title": "BGA Name (Excel/JSON File)",
+        "type": "string",
+        "default": "Erfstadt_v1",
+        "description": "Enter the name of the Excel/JSON file without extension (e.g., Erfstadt_v1)"
+      },
       "liveDataHistorian": {
         "title": "Live Data Query (Historian) - For Old BGAs",
         "type": "array",
@@ -43,6 +49,10 @@
       }
     },
     "UISchema": {
+      "bgaName": {
+        "ui:widget": "text",
+        "ui:placeholder": "Enter BGA name (e.g., Erfstadt_v1)"
+      },
       "liveDataHistorian": {
         "ui:field": "dataSource",
         "ui:binding": { "multiple": ["Name", "Value", "Timestamp", "Quality"] }
