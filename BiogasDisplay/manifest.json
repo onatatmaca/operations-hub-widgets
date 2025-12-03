@@ -1,0 +1,45 @@
+{
+  "typeName": "BiogasDisplay",
+  "pluginId": "BiogasDisplay",
+  "category": "Custom",
+  "description": {
+    "title": "Biogas Plant Display",
+    "overview": "Real-time biogas plant process data display with Historian integration"
+  },
+  "info": {
+    "version": "1.0.0",
+    "updated": "11/27/2024",
+    "size": "15,000 bytes",
+    "developer": "Custom"
+  },
+  "customIcon": "/custom/default/BiogasDisplay/placeholder.jpg",
+  "origin": "custom",
+  "placeholder": "/custom/default/BiogasDisplay/placeholder.jpg",
+  "preview": "/custom/default/BiogasDisplay/preview.jpg",
+  "scripts": "",
+  "schema": {
+    "draggable": true,
+    "JSONSchema": {
+      "queryData": {
+        "title": "Historian Tags Query",
+        "type": "array",
+        "$ref": "#/definitions/dataSource"
+      },
+      "locale": {
+        "title": "Language/Region",
+        "type": "string",
+        "enum": ["DE", "US", "UK"],
+        "default": "DE"
+      }
+    },
+    "UISchema": {
+      "queryData": {
+        "ui:field": "dataSource",
+        "ui:binding": { "multiple": ["Name", "Value", "Timestamp", "Quality"] }
+      },
+      "locale": {
+        "ui:widget": "select"
+      }
+    }
+  }
+}

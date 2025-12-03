@@ -1,0 +1,304 @@
+.biogas-container {
+    width: 100%;
+    max-width: 1600px;
+    height: 100%;
+    font-family: Arial, sans-serif;
+    background: transparent;
+    color: #e0e0e0;
+    padding: 15px;
+    padding-bottom: 70px;
+    margin: 0 auto;
+    overflow: auto;
+    box-sizing: border-box;
+}
+
+/* Section Headers */
+.section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+    background: #2d67b0;
+    margin: 18px 0 0 0;
+    padding: 10px 15px;
+    border-radius: 4px 4px 0 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Tables */
+.biogas-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    background: rgba(40, 40, 40, 0.95);
+    border-radius: 0 0 4px 4px;
+    overflow: hidden;
+}
+
+.biogas-table thead {
+    background: #1a1a1a;
+}
+
+.biogas-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 700;
+    color: #ffffff;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #2a2a2a;
+    border-bottom: 2px solid #2d67b0;
+}
+
+/* Fixed column widths - CRITICAL: All tables must use EXACT same widths */
+.biogas-table {
+    table-layout: fixed;
+}
+
+.biogas-table th:nth-child(1),
+.biogas-table td:nth-child(1) {
+    width: 85px;
+    min-width: 85px;
+    max-width: 85px;
+}
+
+.biogas-table th:nth-child(2),
+.biogas-table td:nth-child(2) {
+    width: auto;
+}
+
+.biogas-table th:nth-child(3),
+.biogas-table td:nth-child(3) {
+    width: 280px;
+    min-width: 280px;
+    max-width: 280px;
+}
+
+.biogas-table th:nth-child(4),
+.biogas-table td:nth-child(4) {
+    width: 130px;
+    min-width: 130px;
+    max-width: 130px;
+    text-align: right;
+    padding-right: 15px;
+}
+
+/* Table rows */
+.biogas-table tbody tr {
+    transition: background-color 0.2s;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.biogas-table tbody tr:nth-child(odd) {
+    background: rgba(45, 45, 45, 0.6);
+}
+
+.biogas-table tbody tr:nth-child(even) {
+    background: rgba(55, 55, 55, 0.6);
+}
+
+.biogas-table tbody tr:hover {
+    background: rgba(45, 103, 176, 0.25);
+}
+
+.biogas-table tbody tr.expanded {
+    background: rgba(45, 103, 176, 0.35);
+}
+
+.biogas-table td {
+    padding: 8px 12px;
+    font-size: 11px;
+}
+
+/* Tag ID */
+.tag-id {
+    font-weight: 700;
+    color: #82dffe;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+}
+
+/* Description */
+.description {
+    color: #e0e0e0;
+}
+
+/* Historian Tag */
+.historian-tag {
+    font-family: 'Courier New', monospace;
+    color: #6a8bb0;
+    font-size: 9px;
+}
+
+/* Values */
+.value {
+    font-weight: 700;
+    font-size: 14px;
+    font-family: 'Courier New', monospace;
+    text-align: right;
+    color: #86f37a;
+}
+
+.value.offline {
+    color: #db455a;
+}
+
+.unit {
+    color: #a0a0a0;
+    font-weight: 600;
+    font-size: 11px;
+    margin-left: 3px;
+}
+
+/* Historical expansion panel */
+.history-row {
+    display: none;
+}
+
+.history-row.visible {
+    display: table-row;
+}
+
+.history-row td {
+    padding: 0 !important;
+    border: none !important;
+    background: rgba(20, 20, 20, 0.98) !important;
+}
+
+.history-content {
+    padding: 20px;
+    display: flex;
+    gap: 20px;
+    border-top: 2px solid #2d67b0;
+}
+
+.history-table-container {
+    flex: 0 0 320px;
+}
+
+.history-table {
+    width: 100%;
+    font-size: 10px;
+    border-collapse: collapse;
+    background: rgba(40, 40, 40, 0.9);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.history-table th {
+    background: #2d67b0;
+    color: #ffffff;
+    padding: 8px 10px;
+    font-size: 10px;
+    text-align: left;
+    font-weight: 700;
+}
+
+.history-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: #e0e0e0;
+    background: rgba(50, 50, 50, 0.7);
+}
+
+.history-table tr:nth-child(even) td {
+    background: rgba(60, 60, 60, 0.7);
+}
+
+.history-chart-container {
+    flex: 1;
+    min-height: 240px;
+    background: rgba(30, 30, 30, 0.95);
+    border-radius: 4px;
+    padding: 15px;
+    position: relative;
+}
+
+.chart-title {
+    text-align: center;
+    color: #82dffe;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.chart-canvas {
+    width: 100%;
+    max-width: 700px;
+    height: 200px;
+    background: rgba(20, 20, 20, 0.8);
+    border-radius: 3px;
+    display: block;
+}
+
+.loading-indicator {
+    text-align: center;
+    padding: 30px;
+    color: #82dffe;
+    font-size: 12px;
+}
+
+/* Status Bar */
+.status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(30, 30, 30, 0.98);
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 2px solid #2d67b0;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-label {
+    color: #a0a0a0;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.status-value {
+    color: #82dffe;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #86f37a;
+    box-shadow: 0 0 8px rgba(134, 243, 122, 0.6);
+}
+
+.status-dot.offline {
+    background: #db455a;
+    box-shadow: 0 0 8px rgba(219, 69, 90, 0.6);
+}
+
+/* Mobile */
+@media (max-width: 1024px) {
+    .biogas-table th:nth-child(3),
+    .biogas-table td:nth-child(3) {
+        display: none;
+    }
+    
+    .history-content {
+        flex-direction: column;
+    }
+    
+    .history-table-container {
+        flex: 1;
+    }
+}
