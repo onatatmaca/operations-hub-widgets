@@ -273,10 +273,40 @@
       "title": "TAGESMENGEN & DURCHFLUSS",
       "tags": [
         {
+          "ri": "",
+          "description": "Tagesmenge zum Dekanter",
+          "unit": "m³",
+          "variable": "STAT6.T_MENGE_DEKANTER_SCALE.F_CV"
+        },
+        {
+          "ri": "",
+          "description": "Tagesmenge Abwasser zum Rohwarentank",
+          "unit": "m³",
+          "variable": "STAT6.T_MENGE_ABWASS_ROWATA_SCALE.F_CV"
+        },
+        {
+          "ri": "",
+          "description": "Tagesmenge Abwasser zum Abwassertank",
+          "unit": "m³",
+          "variable": "STAT6.T_MENGE_ABWASS_ABWATA_SCALE.F_CV"
+        },
+        {
+          "ri": "",
+          "description": "Tagesmenge Brauchwasser",
+          "unit": "m³",
+          "variable": "STAT6.T_MENGE_BRAUCHWASSER_SCALE.F_CV"
+        },
+        {
           "ri": "MS065",
           "description": "Durchfluss Zulauf Dekanter",
           "unit": "m³/h",
           "variable": "STAT6.141FME_A01_SCALE.F_CV"
+        },
+        {
+          "ri": "",
+          "description": "Durchfluss Brauchwasser",
+          "unit": "m³/h",
+          "variable": "STAT6.FLOW_BRAUCHWASSER_SCALE.F_CV"
         }
       ]
     }
