@@ -210,47 +210,70 @@
     var ctx = canvas.getContext('2d');
     var width = canvas.width;
     var height = canvas.height;
-    
+
     ctx.clearRect(0, 0, width, height);
-    
+
     if (!data || data.length === 0) {
-      ctx.fillStyle = '#666';
-      ctx.font = '12px Arial';
+      ctx.fillStyle = '#999';
+      ctx.font = '16px Arial';
       ctx.textAlign = 'center';
       ctx.fillText('No data available', width / 2, height / 2);
       return;
     }
-    
+
+    // Calculate value range with 10% padding for better visibility
     var values = data.map(function(d) { return d.value; });
     var minValue = Math.min.apply(null, values);
     var maxValue = Math.max.apply(null, values);
     var range = maxValue - minValue;
     if (range === 0) range = 1;
-    
-    var padding = 40;
-    var chartHeight = height - padding - 20;
-    var chartWidth = width - padding - 20;
-    
-    // Grid
-    ctx.strokeStyle = '#333';
+
+    // Add 10% padding to min/max for better visualization
+    var padding = range * 0.1;
+    minValue = minValue - padding;
+    maxValue = maxValue + padding;
+    range = maxValue - minValue;
+
+    // Chart dimensions with better padding
+    var paddingLeft = 80;
+    var paddingRight = 30;
+    var paddingTop = 30;
+    var paddingBottom = 50;
+    var chartHeight = height - paddingTop - paddingBottom;
+    var chartWidth = width - paddingLeft - paddingRight;
+
+    // Draw horizontal grid lines (6 lines)
+    ctx.strokeStyle = 'rgba(100, 100, 100, 0.3)';
     ctx.lineWidth = 1;
-    for (var i = 0; i <= 4; i++) {
-      var y = padding + (chartHeight / 4) * i;
+    for (var i = 0; i <= 5; i++) {
+      var y = paddingTop + (chartHeight / 5) * i;
       ctx.beginPath();
-      ctx.moveTo(padding, y);
-      ctx.lineTo(width - 10, y);
+      ctx.moveTo(paddingLeft, y);
+      ctx.lineTo(paddingLeft + chartWidth, y);
       ctx.stroke();
     }
-    
-    // Line
+
+    // Draw Y-axis labels (values)
+    ctx.fillStyle = '#e0e0e0';
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (var i = 0; i <= 5; i++) {
+      var value = maxValue - (range / 5) * i;
+      var y = paddingTop + (chartHeight / 5) * i;
+      ctx.fillText(value.toFixed(1) + ' ' + unit, paddingLeft - 10, y);
+    }
+
+    // Draw data line
     ctx.strokeStyle = '#82dffe';
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    
+
     for (var i = 0; i < data.length; i++) {
-      var x = padding + (chartWidth / (data.length - 1)) * i;
-      var y = padding + chartHeight - ((data[i].value - minValue) / range) * chartHeight;
-      
+      var x = paddingLeft + (chartWidth / (data.length - 1)) * i;
+      var valueRatio = (data[i].value - minValue) / range;
+      var y = paddingTop + chartHeight - (valueRatio * chartHeight);
+
       if (i === 0) {
         ctx.moveTo(x, y);
       } else {
@@ -258,32 +281,47 @@
       }
     }
     ctx.stroke();
-    
-    // Points
+
+    // Draw data points
     ctx.fillStyle = '#86f37a';
     for (var i = 0; i < data.length; i++) {
-      var x = padding + (chartWidth / (data.length - 1)) * i;
-      var y = padding + chartHeight - ((data[i].value - minValue) / range) * chartHeight;
-      
+      var x = paddingLeft + (chartWidth / (data.length - 1)) * i;
+      var valueRatio = (data[i].value - minValue) / range;
+      var y = paddingTop + chartHeight - (valueRatio * chartHeight);
+
       ctx.beginPath();
-      ctx.arc(x, y, 3, 0, 2 * Math.PI);
+      ctx.arc(x, y, 5, 0, 2 * Math.PI);
       ctx.fill();
     }
-    
-    // Labels
-    ctx.fillStyle = '#e0e0e0';
-    ctx.font = '10px Courier New';
-    ctx.textAlign = 'right';
-    ctx.fillText(maxValue.toFixed(1) + ' ' + unit, padding - 5, padding + 5);
-    ctx.fillText(minValue.toFixed(1) + ' ' + unit, padding - 5, padding + chartHeight + 5);
-    
+
+    // Draw X-axis labels (time)
     if (data.length > 0) {
+      ctx.fillStyle = '#e0e0e0';
+      ctx.font = 'bold 13px Arial';
       ctx.textAlign = 'center';
-      var firstTime = data[0].time;
-      var lastTime = data[data.length - 1].time;
-      
-      ctx.fillText(firstTime.getHours() + ':00', padding, height - 5);
-      ctx.fillText(lastTime.getHours() + ':00', width - 10, height - 5);
+      ctx.textBaseline = 'top';
+
+      // Show labels every 4 hours or adjust based on data points
+      var labelInterval = Math.max(1, Math.floor(data.length / 6));
+      for (var i = 0; i < data.length; i += labelInterval) {
+        var x = paddingLeft + (chartWidth / (data.length - 1)) * i;
+        var time = data[i].time;
+        var hours = time.getHours();
+        var minutes = time.getMinutes();
+        var timeStr = hours + ':' + (minutes < 10 ? '0' : '') + minutes;
+        ctx.fillText(timeStr, x, paddingTop + chartHeight + 10);
+      }
+
+      // Always show last point
+      if (data.length > 1) {
+        var lastIdx = data.length - 1;
+        var x = paddingLeft + chartWidth;
+        var time = data[lastIdx].time;
+        var hours = time.getHours();
+        var minutes = time.getMinutes();
+        var timeStr = hours + ':' + (minutes < 10 ? '0' : '') + minutes;
+        ctx.fillText(timeStr, x, paddingTop + chartHeight + 10);
+      }
     }
   };
 
@@ -323,16 +361,13 @@
     
     // Check if we have real historical data in cache
     var hourlyData = null;
-    var dataSource = '(Simuliert)'; // Default to simulated
 
     if (historicalCache[tagName] && historicalCache[tagName].length > 0) {
       hourlyData = historicalCache[tagName];
-      dataSource = '(Historian)';
       console.log('[BIOGAS] Using REAL Historian data from cache:', hourlyData.length, 'points');
     } else {
       console.log('[BIOGAS] No historical data in cache, using simulated data');
       hourlyData = generate24HourData(currentValue);
-      dataSource = '(Simuliert)';
     }
 
     // Generate daily averages (for now still simulated - would need separate daily query)
@@ -357,9 +392,7 @@
     tableContainer.html(tableHTML);
 
     var chartContainer = $('<div class="history-chart-container"></div>');
-    var chartTitle = locale === 'DE' ?
-      'Letzte 24 Stunden ' + dataSource :
-      'Last 24 Hours ' + dataSource;
+    var chartTitle = locale === 'DE' ? 'Letzte 24 Stunden' : 'Last 24 Hours';
     chartContainer.append('<div class="chart-title">' + chartTitle + '</div>');
     var canvas = $('<canvas class="chart-canvas" width="1400" height="400"></canvas>');
     chartContainer.append(canvas);
