@@ -212,147 +212,113 @@
     return data;
   };
 
+  // Store chart instance to destroy on re-render
+  var chartInstance = null;
+
   var drawChart = function(canvas, data, unit) {
-    var ctx = canvas.getContext('2d');
-    var width = canvas.width;
-    var height = canvas.height;
-
-    ctx.clearRect(0, 0, width, height);
-
     if (!data || data.length === 0) {
+      var ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = '#999';
       ctx.font = '16px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('No data available', width / 2, height / 2);
+      ctx.fillText('No data available', canvas.width / 2, canvas.height / 2);
       return;
     }
 
-    console.log('[BIOGAS] Drawing chart with', data.length, 'data points');
-    console.log('[BIOGAS] First data point:', data[0]);
-    console.log('[BIOGAS] Last data point:', data[data.length - 1]);
+    console.log('[BIOGAS] Drawing chart with Chart.js,', data.length, 'data points');
 
-    // Calculate value range with 10% padding for better visibility
+    // Destroy previous chart instance if exists
+    if (chartInstance) {
+      chartInstance.destroy();
+    }
+
+    // Prepare data for Chart.js
+    var labels = data.map(function(d) {
+      var hours = d.time.getHours();
+      var minutes = d.time.getMinutes();
+      return hours + ':' + (minutes < 10 ? '0' : '') + minutes;
+    });
+
     var values = data.map(function(d) { return d.value; });
-    var minValue = Math.min.apply(null, values);
-    var maxValue = Math.max.apply(null, values);
-    var range = maxValue - minValue;
 
-    console.log('[BIOGAS] Value range: min=' + minValue + ', max=' + maxValue + ', range=' + range);
-
-    // Handle case where all values are the same
-    if (range === 0 || range < 0.01) {
-      // Use 10% of the value as range, minimum 1
-      range = Math.max(1, Math.abs(minValue) * 0.1);
-      minValue = minValue - range / 2;
-      maxValue = maxValue + range / 2;
-    } else {
-      // Add 10% padding to min/max for better visualization
-      var padding = range * 0.1;
-      minValue = minValue - padding;
-      maxValue = maxValue + padding;
-    }
-
-    range = maxValue - minValue;
-    console.log('[BIOGAS] Adjusted range: min=' + minValue + ', max=' + maxValue + ', range=' + range);
-
-    // Chart dimensions with better padding
-    var paddingLeft = 80;
-    var paddingRight = 30;
-    var paddingTop = 30;
-    var paddingBottom = 50;
-    var chartHeight = height - paddingTop - paddingBottom;
-    var chartWidth = width - paddingLeft - paddingRight;
-
-    // Draw horizontal grid lines (6 lines)
-    ctx.strokeStyle = 'rgba(100, 100, 100, 0.3)';
-    ctx.lineWidth = 1;
-    for (var i = 0; i <= 5; i++) {
-      var y = paddingTop + (chartHeight / 5) * i;
-      ctx.beginPath();
-      ctx.moveTo(paddingLeft, y);
-      ctx.lineTo(paddingLeft + chartWidth, y);
-      ctx.stroke();
-    }
-
-    // Draw Y-axis labels (values)
-    ctx.fillStyle = '#e0e0e0';
-    ctx.font = 'bold 14px Arial';
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    for (var i = 0; i <= 5; i++) {
-      var value = maxValue - (range / 5) * i;
-      var y = paddingTop + (chartHeight / 5) * i;
-      ctx.fillText(value.toFixed(1) + ' ' + unit, paddingLeft - 10, y);
-    }
-
-    // Draw data line
-    ctx.strokeStyle = '#82dffe';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-
-    var coordsDrawn = [];
-    for (var i = 0; i < data.length; i++) {
-      var x = paddingLeft + (chartWidth / (data.length - 1)) * i;
-      var valueRatio = (data[i].value - minValue) / range;
-      var y = paddingTop + chartHeight - (valueRatio * chartHeight);
-
-      coordsDrawn.push({x: x, y: y, value: data[i].value});
-
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
+    // Create Chart.js chart
+    var ctx = canvas.getContext('2d');
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: unit,
+          data: values,
+          borderColor: '#82dffe',
+          backgroundColor: 'rgba(130, 223, 254, 0.1)',
+          borderWidth: 3,
+          pointBackgroundColor: '#86f37a',
+          pointBorderColor: '#86f37a',
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          tension: 0.1,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            titleColor: '#fff',
+            bodyColor: '#fff',
+            borderColor: '#82dffe',
+            borderWidth: 1,
+            callbacks: {
+              label: function(context) {
+                return context.parsed.y.toFixed(1) + ' ' + unit;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: {
+              color: 'rgba(100, 100, 100, 0.2)',
+              borderColor: '#555'
+            },
+            ticks: {
+              color: '#e0e0e0',
+              font: {
+                size: 12,
+                weight: 'bold'
+              },
+              maxRotation: 0,
+              autoSkipPadding: 20
+            }
+          },
+          y: {
+            grid: {
+              color: 'rgba(100, 100, 100, 0.2)',
+              borderColor: '#555'
+            },
+            ticks: {
+              color: '#e0e0e0',
+              font: {
+                size: 13,
+                weight: 'bold'
+              },
+              callback: function(value) {
+                return value.toFixed(1) + ' ' + unit;
+              }
+            }
+          }
+        }
       }
-    }
-    ctx.stroke();
+    });
 
-    console.log('[BIOGAS] Drew line through', coordsDrawn.length, 'points');
-    console.log('[BIOGAS] First coord:', coordsDrawn[0]);
-    console.log('[BIOGAS] Last coord:', coordsDrawn[coordsDrawn.length - 1]);
-
-    // Draw data points
-    ctx.fillStyle = '#86f37a';
-    for (var i = 0; i < data.length; i++) {
-      var x = paddingLeft + (chartWidth / (data.length - 1)) * i;
-      var valueRatio = (data[i].value - minValue) / range;
-      var y = paddingTop + chartHeight - (valueRatio * chartHeight);
-
-      ctx.beginPath();
-      ctx.arc(x, y, 5, 0, 2 * Math.PI);
-      ctx.fill();
-    }
-
-    console.log('[BIOGAS] Chart drawing complete');
-
-    // Draw X-axis labels (time)
-    if (data.length > 0) {
-      ctx.fillStyle = '#e0e0e0';
-      ctx.font = 'bold 13px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-
-      // Show labels every 4 hours or adjust based on data points
-      var labelInterval = Math.max(1, Math.floor(data.length / 6));
-      for (var i = 0; i < data.length; i += labelInterval) {
-        var x = paddingLeft + (chartWidth / (data.length - 1)) * i;
-        var time = data[i].time;
-        var hours = time.getHours();
-        var minutes = time.getMinutes();
-        var timeStr = hours + ':' + (minutes < 10 ? '0' : '') + minutes;
-        ctx.fillText(timeStr, x, paddingTop + chartHeight + 10);
-      }
-
-      // Always show last point
-      if (data.length > 1) {
-        var lastIdx = data.length - 1;
-        var x = paddingLeft + chartWidth;
-        var time = data[lastIdx].time;
-        var hours = time.getHours();
-        var minutes = time.getMinutes();
-        var timeStr = hours + ':' + (minutes < 10 ? '0' : '') + minutes;
-        ctx.fillText(timeStr, x, paddingTop + chartHeight + 10);
-      }
-    }
+    console.log('[BIOGAS] Chart.js rendering complete');
   };
 
   var showHistoricalData = function(tagName, row) {
