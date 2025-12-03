@@ -1,0 +1,37 @@
+.novo-f97a [class^='dx-'] td, .novo-f97a [class^='dx-'] th, .novo-f97a [class^='dx-'] table, .novo-f97a .dx-datagrid-borders, .novo-f97a .dx-datagrid-rowsview, .novo-f97a .dx-datagrid-nowrap {
+    border-color: #bd10e0!important;
+}
+
+.novo-f97a .dx-widget {
+    font-size: 12px!important;
+}
+
+.dx-widget[filter-align="center"] .dx-datagrid-headers .dx-datagrid-table .dx-row > td {
+    text-align: center !important;
+}
+
+.dx-widget[filter-align="left"] .dx-datagrid-headers .dx-datagrid-table .dx-row > td {
+    text-align: left !important;
+}
+
+.dx-widget[filter-align="right"] .dx-datagrid-headers .dx-datagrid-table .dx-row > td {
+    text-align: right !important;
+}
+#wrapper {
+    height: 100%;
+    width: 100%;
+}
+/*min-width of default configuration from manifest file*/
+#pgridContainer {
+    min-height: 160px;
+    min-width: 300px;
+}
+
+.dx-pivotgrid .dx-pivotgrid-area-data tbody td {
+  text-align: center !important;
+}
+
+/* Hide expand/collapse glyphs + remove hand cursor */
+.dx-pivotgrid .dx-expand { display: none !important; }
+.dx-pivotgrid .dx-pivotgrid-collapsed,
+.dx-pivotgrid .dx-pivotgrid-expanded { cursor: default !important; }

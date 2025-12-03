@@ -1,0 +1,515 @@
+{
+	"typeName": "GEPivotGrid",
+	"pluginId": "GEPivotGrid",
+	"category": "Display",
+	"system": true,
+	"description": {
+		"title": "Grid - Pivot",
+		"overview": "This control is used to display a set of grouped values from a more extensive table within discrete rows or columns.  Cells can be conditionally formatted, rows and columns can be filtered by value, and data can be exported to a CSV file."
+	},
+	"info": {
+		"version": "1.6.2",
+		"updated": "06/08/2023",
+		"size": "",
+		"developer": "GE Vernova"
+	},
+	"customIcon": "/custom/default/GEPivotGrid/customIcon.png",
+	"origin": "custom",
+	"placeholder": "/custom/default/GEPivotGrid/preview.png",
+	"preview": "/custom/default/GEPivotGrid/preview.png",
+	"scripts": [],
+	"fieldsDescription": {
+		"Source": "<b>Source:</b> The query driving the pivot grid",
+		"General": "<b>General:</b> Basic display settings",
+		"Sort and Filter": "<b>Sort and Filter:</b> Setting to enable/disable various sorting and filtering capabilities",
+		"Totals": "<b>Totals:</b> Settings to enable/disable total/grand total rows and columns",
+		"Field Configuration": "<b>Field Configuration:</b> For each field in the query, set it as a row, column, or data value for the pivot chart.  You must select at least one row field, one column field, and one data field.",
+		"Formatting": "<b>Formatting:</b> Set font and background colors for cells and headers",
+		"Item Configuration": "<b>Item Configuration:</b> Area to add optional display text for row/column values, as well as add one or more conditional formats for each.",
+		"bottom line": ""
+	},
+	"schema": {
+		"draggable": true,
+		"JSONSchema": 
+		{
+			"input": 
+			{
+				"title": "Input",
+				"$ref": "#/definitions/dataSource"
+			},
+			"numberFormat":{
+				"title": "Number Format",
+				"$ref": "#/definitions/numberFormat"
+			},
+			"general": 
+			{
+				"title": "General",
+				"type": "object",
+				"properties": 
+				{
+					"height": 
+					{
+						"title": "Height (px) - 0 equals dynamic",
+						"type": "integer",
+						"default": 400
+					},
+					"rowHeaderWidth": 
+					{
+						"title": "Row Header Width (px) - 0 equals dynamic",
+						"type": "integer",
+						"default": 200
+					},
+					"showBorders": {
+						"title": "Show Borders",
+						"type": "boolean",
+						"default": false
+					}
+				}
+			},
+			"sortFilter": 
+			{
+				"title": "Features",
+				"type": "object",
+				"properties": 
+				{
+					"allowSorting": 
+					{
+						"title": "Allow Sorting",
+						"type": "boolean",
+						"default": true
+					},
+					"allowSortingBySummary": 
+					{
+						"title": "Allow Sorting by Summary",
+						"type": "boolean",
+						"default": false
+					},
+					"allowFilter": 
+					{
+						"title": "Allow Filtering Row/Column Values",
+						"type": "boolean",
+						"default": true
+					},
+					"allowExpand": 
+					{
+						"title": "Allow Expand/Collapse All",
+						"type": "boolean",
+						"default": true
+					},
+					"allowExport": {
+						"title": "Allow Export",
+						"type": "boolean",
+						"default": true
+					}
+				}
+			},
+			"totals": 
+			{
+				"title": "Totals",
+				"type": "object",
+				"properties": 
+				{
+					"showRowTotal": 
+					{
+						"title": "Show Row Totals",
+						"type": "boolean",
+						"default": false
+					},
+					"showRowGrandTotal": 
+					{
+						"title": "Show Row Grand Totals",
+						"type": "boolean",
+						"default": false
+					},
+					"showColumnTotal": 
+					{
+						"title": "Show Column Totals",
+						"type": "boolean",
+						"default": false
+					},
+					"showColumnGrandTotal": 
+					{
+						"title": "Show Column Grand Totals",
+						"type": "boolean",
+						"default": false
+					}
+				}
+			},
+			"fields": 
+			{
+				"title": "Field Configuration",
+				"type": "array",
+				"minItems": 3,
+				"items": 
+				{
+					"type": "object",
+					"title": "Field",
+					"properties": 
+					{
+						"dataField": 
+						{
+							"type": "string",
+							"title": "Data Field"
+						},
+						"dataType": 
+						{
+							"type": "string",
+							"title": "Data Type",
+							"enum": 
+							[
+								"string",
+								"number",
+								"date"
+							],
+							"enumNames":
+							[
+								"String",
+								"Number",
+								"Date"
+							],		
+							"default": "string"
+						},
+						"caption": 
+						{
+							"type": "string",
+							"title": "Caption"
+						},
+						"area": 
+						{
+							"type": "string",
+							"title": "Area",
+							"enum": 
+							[
+								"data",
+								"column",
+								"row",
+								"filter"
+							],
+							"enumNames":[
+								"Data",
+								"Column",
+								"Row",
+								"Filter"
+							],		
+							"default": "data"
+						}
+					},
+					"dependencies": {
+						"area": {
+							"oneOf": [
+								{
+									"properties": {
+										"area": {
+											"enum": [
+												"data"
+											]
+										},
+										"dataOptions": 
+										{
+											"type": "object",
+											"title": "Data Properties (only if Area is Data)",
+											"properties": {				
+												"format": 
+												{
+													"title": "Format",
+													"type": "string",
+													"enum": [
+														"currency",
+														"decimal",
+														"shortDate",
+														"longTime",
+														"shortDateShortTime",
+														"string"
+													],
+													"enumNames":[
+														"Currency",
+														"Decimal",
+														"Date",
+														"Time",
+														"DateTime",
+														"String"
+													],		
+													"default": "decimal"
+												}
+											},
+											"dependencies": {
+												"format": {
+													"oneOf": [
+														{
+															"properties": {
+																"format": {
+																	"enum": [
+																		"currency",
+																		"decimal"
+																	]
+																},
+																"summary": 
+																{
+																	"type": "string",
+																	"title": "Summary",
+																	"enum": 
+																	[
+																		"sum",
+																		"min",
+																		"max",
+																		"count",
+																		"avg"
+																	],
+																	"enumNames":[
+																		"Sum",
+																		"Minimum",
+																		"Maximum",
+																		"Count",
+																		"Average"
+																	],		
+																	"default": "sum"										
+																}
+															}
+														}
+													]
+												}
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				}
+			},
+			"formatting": {
+				"title": "Formatting",
+				"type": "object",
+				"properties": {
+					"cellBgColor": 
+					{
+						"type": "string",
+						"title": "Cell Color",
+						"default":{"hex":"#FFFFFF","rgb":{"r":255,"g":255,"b":255,"a":100}}
+					},
+					"cellFontColor": 
+					{
+						"type": "string",
+						"title": "Cell Font Color",
+						"default":{"hex":"#333333","rgb":{"r":51,"g":51,"b":51,"a":100}}
+					},
+					"rowHeaderBgColor": 
+					{
+						"type": "string",
+						"title": "Row Header Background Color",
+						"default":{"hex":"#FFFFFF","rgb":{"r":255,"g":255,"b":255,"a":100}}
+					},
+					"rowHeaderFontColor": 
+					{
+						"type": "string",
+						"title": "Row Header Font Color",
+						"default":{"hex":"#959595","rgb":{"r":149,"g":149,"b":149,"a":100}}
+					},
+					"colHeaderBgColor": 
+					{
+						"type": "string",
+						"title": "Column Header Background Color",
+						"default":{"hex":"#FFFFFF","rgb":{"r":255,"g":255,"b":255,"a":100}}
+					},
+					"colHeaderFontColor": 
+					{
+						"type": "string",
+						"title": "Column Header Font Color",
+						"default":{"hex":"#959595","rgb":{"r":149,"g":149,"b":149,"a":100}}
+					},
+					"totalBgColor": 
+					{
+						"type": "string",
+						"title": "Totals Background Color",
+						"default":{"hex":"#F8F8F8","rgb":{"r":248,"g":248,"b":248,"a":100}}
+					},
+					"totalFontColor": 
+					{
+						"type": "string",
+						"title": "Totals Font Color",
+						"default":{"hex":"#959595","rgb":{"r":149,"g":149,"b":149,"a":100}}
+					}
+				}
+			},
+			"itemConfig": 
+			{
+				"title": "Item Configuration",
+				"type": "array",
+				"minItems": 0,
+				"items": 
+				{
+					"type": "object",
+					"title": "Item Display",
+					"properties": 
+					{
+						"itemTagName": 
+						{
+							"type": "string",
+							"title": "Row/Column Value"
+						},
+						"itemDisplayName": 
+						{
+							"type": "string",
+							"title": "Display Value (optional)"
+						},
+						"itemConditionalFormatting":
+						{
+							"title": "Conditional Formatting",
+							"type": "array",
+							"minItems": 0,
+							"items": 
+							{
+								"type": "object",
+								"title": "Cell Format",
+								"properties": 
+								{
+									"comparisonPanel": {
+										"type": "object",
+										"title": "",
+										"properties": {
+											"cellComparison": 
+											{
+												"type": "string",
+												"title": "Comparison",
+												"enum": 
+												[
+													"<",
+													"<=",
+													">",
+													">=",
+													"=",
+													"!=",
+													"Always"
+												],
+												"enumNames":
+												[
+													"<",
+													"<=",
+													">",
+													">=",
+													"=",
+													"!=",
+													"Always"
+												]
+											}
+										},
+										"dependencies": {
+											"cellComparison": {
+												"oneOf": [
+													{
+														"properties": {
+															"cellComparison": {
+																"enum": [
+																	"<",
+																	"<=",
+																	">",
+																	">=",
+																	"=",
+																	"!="
+																]
+															},
+															"cellValue": 
+															{
+																"type": "number",
+																"title": "Value"
+															}
+														}
+													}
+												]
+											
+											}
+										}
+									}, 
+									"colorPanel": {
+										"type": "object",
+										"title": "",
+										"properties": {
+											"cellBgColor": 
+											{
+												"type": "string",
+												"title": "Cell Color",
+												"default":{"hex":"#FFFFFF","rgb":{"r":255,"g":255,"b":255,"a":100}}
+											},
+											"cellFontColor": 
+											{
+												"type": "string",
+												"title": "Cell Font Color",
+												"default":{"hex":"#000000","rgb":{"r":0,"g":0,"b":0,"a":100}}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"UISchema": {
+			"input": {
+				"ui:field": "dataSource",
+				"ui:contents": ["query"],
+				"ui:binding": { "array": [["timestamp"],["name"],["value"],["quality"]] }
+			},
+			"general": {
+				"backgroundColor": {
+					"ui:widget": "color"
+				},
+				"borderColor": {
+					"ui:widget": "color"
+				},
+				"enableStatePersistence": {
+					"ui:widget": "hidden"
+				}
+			},
+			"formatting": {
+				"cellBgColor": {
+					"ui:widget": "color"
+				},
+				"cellFontColor": {
+					"ui:widget": "color"
+				},
+				"rowHeaderBgColor": {
+					"ui:widget": "color"
+				},
+				"rowHeaderFontColor": {
+					"ui:widget": "color"
+				},
+				"colHeaderBgColor": {
+					"ui:widget": "color"
+				},
+				"colHeaderFontColor": {
+					"ui:widget": "color"
+				},
+				"totalBgColor": {
+					"ui:widget": "color"
+				},
+				"totalFontColor": {
+					"ui:widget": "color"
+				}
+			},
+			"itemConfig": {
+				"items": {
+					"itemConditionalFormatting": {
+						"items": {
+							"colorPanel": {
+								"cellBgColor": {
+									"ui:widget": "color"
+								},
+								"cellFontColor": {
+									"ui:widget": "color"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	},	
+	"defaultConfiguration": {
+		"minHeight": 160,
+		"minWidth": 300,
+		"defaultHeight":465,
+		"defaultWidth":600
+	  }
+}
