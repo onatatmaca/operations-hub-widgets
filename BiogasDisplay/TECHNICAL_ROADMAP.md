@@ -9,6 +9,25 @@
 
 ## 📋 Recent Updates Log
 
+### Update: 2024-12-03 - CRITICAL FIX: Chart.js CDN 404 Error
+**Completed by:** Claude Code AI
+
+**Issue:** Widget failed to load due to Chart.js CDN returning 404 error
+- Previous CDN: `https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js` (404 error)
+- New CDN: `https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js` (Cloudflare CDN)
+
+**Fix:**
+- ✅ Changed Chart.js CDN provider from jsDelivr to cdnjs (Cloudflare)
+- ✅ Updated `manifest.json` line 19 with new CDN URL
+- ✅ Cloudflare CDN is generally more stable and reliable
+
+**Files Modified:**
+- `BiogasDisplay/manifest.json` - Updated scripts array with new CDN URL
+
+**Result:** Widget should now load properly with working Chart.js library
+
+---
+
 ### Update: 2024-12-03 - Major Feature Implementation
 **Completed by:** Claude Code AI
 
