@@ -1,0 +1,104 @@
+{
+  "name": "Erfstadt_v1",
+  "sections": [
+    {
+      "title": "ROHWARE",
+      "tags": [
+        {
+          "ri": "MS008",
+          "description": "Füllstand Lagerbehälter Rohware",
+          "unit": "%",
+          "variable": "STAT6.111LME_A01_SCALE.F_CV"
+        }
+      ]
+    },
+    {
+      "title": "FERTIGWARE & PUMPENSUMPF",
+      "tags": [
+        {
+          "ri": "MS069",
+          "description": "Füllstand Fertigware",
+          "unit": "%",
+          "variable": "STAT6.151PME_A05_SCALE.F_CV"
+        }
+      ]
+    },
+    {
+      "title": "DRUCK & TEMPERATUR",
+      "tags": [
+        {
+          "ri": "MS166",
+          "description": "Druck Beschickungsleitung Zyklon",
+          "unit": "bar",
+          "variable": "STAT6.141PME_C01_SCALE.F_CV"
+        }
+      ]
+    },
+    {
+      "title": "HYGIENISIERUNG 1",
+      "tags": [
+        {
+          "ri": "MS024",
+          "description": "Füllstand Hygienisierungstank 1",
+          "unit": "%",
+          "variable": "STAT6.131PME_A01_SCALE.F_CV"
+        }
+      ]
+    },
+    {
+      "title": "HYGIENISIERUNG 2",
+      "tags": [
+        {
+          "ri": "MS036",
+          "description": "Füllstand Hygienisierungstank 2",
+          "unit": "%",
+          "variable": "STAT6.132PME_A02_SCALE.F_CV"
+        }
+      ]
+    },
+    {
+      "title": "HYGIENISIERUNG 3",
+      "tags": [
+        {
+          "ri": "MS048",
+          "description": "Füllstand Hygienisierungstank 3",
+          "unit": "%",
+          "variable": "STAT6.133PME_A03_SCALE.F_CV"
+        }
+      ]
+    },
+    {
+      "title": "PUMPEN",
+      "tags": [
+        {
+          "ri": "AG17",
+          "description": "Frequenz AG17 Kreiselpumpe vor Hydrozyklon",
+          "unit": "Hz",
+          "variable": "STAT6.141PCI_B01_HZIST_SCALE.F_CV"
+        }
+      ]
+    },
+    {
+      "title": "FETTLAGERTANKS",
+      "tags": [
+        {
+          "ri": "MS073",
+          "description": "Füllstand Fettlagertank 3",
+          "unit": "%",
+          "variable": "STAT6.161PME_A06_SCALE.F_CV"
+        }
+      ]
+    },
+    {
+      "title": "TAGESMENGEN & DURCHFLUSS",
+      "tags": [
+        {
+          "ri": "",
+          "description": "Tagesmenge zum Dekanter",
+          "unit": "m³",
+          "variable": "STAT6.T_MENGE_DEKANTER_SCALE.F_CV"
+        }
+      ]
+    }
+  ]
+}
