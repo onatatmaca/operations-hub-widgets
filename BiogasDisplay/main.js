@@ -56,7 +56,13 @@
   var tagsLoaded = 0;
   var currentValues = {};
   var historicalCache = {}; // Cache for historical data by tag name
-  var queryData = data.queryData;
+
+  // Support dual live data sources: Historian (old BGAs) or OPC UA (new BGAs)
+  var liveDataHistorian = data.liveDataHistorian;
+  var liveDataOPCUA = data.liveDataOPCUA;
+  var liveDataSource = null; // Will be set to whichever is configured
+  var liveDataType = 'none'; // 'historian', 'opcua', or 'none'
+
   var historicalData = data.historicalData;
   var locale = data.locale || 'DE'; // Default to German
 
@@ -221,18 +227,33 @@
       return;
     }
 
+    console.log('[BIOGAS] Drawing chart with', data.length, 'data points');
+    console.log('[BIOGAS] First data point:', data[0]);
+    console.log('[BIOGAS] Last data point:', data[data.length - 1]);
+
     // Calculate value range with 10% padding for better visibility
     var values = data.map(function(d) { return d.value; });
     var minValue = Math.min.apply(null, values);
     var maxValue = Math.max.apply(null, values);
     var range = maxValue - minValue;
-    if (range === 0) range = 1;
 
-    // Add 10% padding to min/max for better visualization
-    var padding = range * 0.1;
-    minValue = minValue - padding;
-    maxValue = maxValue + padding;
+    console.log('[BIOGAS] Value range: min=' + minValue + ', max=' + maxValue + ', range=' + range);
+
+    // Handle case where all values are the same
+    if (range === 0 || range < 0.01) {
+      // Use 10% of the value as range, minimum 1
+      range = Math.max(1, Math.abs(minValue) * 0.1);
+      minValue = minValue - range / 2;
+      maxValue = maxValue + range / 2;
+    } else {
+      // Add 10% padding to min/max for better visualization
+      var padding = range * 0.1;
+      minValue = minValue - padding;
+      maxValue = maxValue + padding;
+    }
+
     range = maxValue - minValue;
+    console.log('[BIOGAS] Adjusted range: min=' + minValue + ', max=' + maxValue + ', range=' + range);
 
     // Chart dimensions with better padding
     var paddingLeft = 80;
@@ -269,10 +290,13 @@
     ctx.lineWidth = 3;
     ctx.beginPath();
 
+    var coordsDrawn = [];
     for (var i = 0; i < data.length; i++) {
       var x = paddingLeft + (chartWidth / (data.length - 1)) * i;
       var valueRatio = (data[i].value - minValue) / range;
       var y = paddingTop + chartHeight - (valueRatio * chartHeight);
+
+      coordsDrawn.push({x: x, y: y, value: data[i].value});
 
       if (i === 0) {
         ctx.moveTo(x, y);
@@ -281,6 +305,10 @@
       }
     }
     ctx.stroke();
+
+    console.log('[BIOGAS] Drew line through', coordsDrawn.length, 'points');
+    console.log('[BIOGAS] First coord:', coordsDrawn[0]);
+    console.log('[BIOGAS] Last coord:', coordsDrawn[coordsDrawn.length - 1]);
 
     // Draw data points
     ctx.fillStyle = '#86f37a';
@@ -293,6 +321,8 @@
       ctx.arc(x, y, 5, 0, 2 * Math.PI);
       ctx.fill();
     }
+
+    console.log('[BIOGAS] Chart drawing complete');
 
     // Draw X-axis labels (time)
     if (data.length > 0) {
@@ -328,8 +358,9 @@
   var showHistoricalData = function(tagName, row) {
     var currentValue = currentValues[tagName];
     var unit = tagUnits[tagName] || '';
-    
-    if (!currentValue || isNaN(currentValue)) {
+
+    // Allow value of 0, only reject undefined/null/NaN
+    if (currentValue === undefined || currentValue === null || isNaN(currentValue)) {
       console.log('[BIOGAS] No current value for', tagName);
       return;
     }
@@ -440,20 +471,32 @@
     addClickHandlers();
   };
 
-  console.log('[BIOGAS] Query data type:', queryData.type);
+  // Determine which live data source is configured
+  if (liveDataHistorian && EMBED.fieldTypeIsQuery(liveDataHistorian)) {
+    liveDataSource = liveDataHistorian;
+    liveDataType = 'historian';
+    console.log('[BIOGAS] Using Historian for live data (Old BGA mode)');
+  } else if (liveDataOPCUA && EMBED.fieldTypeIsQuery(liveDataOPCUA)) {
+    liveDataSource = liveDataOPCUA;
+    liveDataType = 'opcua';
+    console.log('[BIOGAS] Using OPC UA for live data (New BGA mode)');
+  } else {
+    console.log('[BIOGAS] WARNING: No live data source configured!');
+  }
 
   // Initialize UI labels
   initializeLabels();
 
-  if (EMBED.fieldTypeIsQuery(queryData)) {
-    console.log('[BIOGAS] Query mode - subscribing to changes');
+  // Subscribe to live data (Historian or OPC UA)
+  if (liveDataSource) {
+    console.log('[BIOGAS] Subscribing to live data (' + liveDataType + ')');
 
-    EMBED.subscribeFieldToQueryChange(queryData, function(rows) {
-      console.log('[BIOGAS] Query data received!');
+    EMBED.subscribeFieldToQueryChange(liveDataSource, function(rows) {
+      console.log('[BIOGAS] Live data received from ' + liveDataType + ':', rows.length, 'rows');
       processQueryData(rows);
     });
 
-    console.log('[BIOGAS] Subscription active');
+    console.log('[BIOGAS] Live data subscription active');
   }
 
   // Subscribe to historical data if available
