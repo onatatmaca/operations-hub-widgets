@@ -21,7 +21,12 @@
     "draggable": true,
     "JSONSchema": {
       "queryData": {
-        "title": "Historian Tags Query",
+        "title": "Live Data Query",
+        "type": "array",
+        "$ref": "#/definitions/dataSource"
+      },
+      "historicalData": {
+        "title": "Historical Data Query (Optional - Last 24h)",
         "type": "array",
         "$ref": "#/definitions/dataSource"
       },
@@ -34,6 +39,10 @@
     },
     "UISchema": {
       "queryData": {
+        "ui:field": "dataSource",
+        "ui:binding": { "multiple": ["Name", "Value", "Timestamp", "Quality"] }
+      },
+      "historicalData": {
         "ui:field": "dataSource",
         "ui:binding": { "multiple": ["Name", "Value", "Timestamp", "Quality"] }
       },

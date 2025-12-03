@@ -55,7 +55,9 @@
 
   var tagsLoaded = 0;
   var currentValues = {};
+  var historicalCache = {}; // Cache for historical data by tag name
   var queryData = data.queryData;
+  var historicalData = data.historicalData;
   var locale = data.locale || 'DE'; // Default to German
 
   // Translations
@@ -204,72 +206,6 @@
     return data;
   };
 
-  // Query Historian for REAL historical data
-  var queryHistorianHistory = function(tagName, startTime, endTime, callback) {
-    console.log('[BIOGAS] Attempting to query Historian for:', tagName);
-    console.log('[BIOGAS] Time range:', startTime.toISOString(), 'to', endTime.toISOString());
-    
-    try {
-      // Create historical query using dd-historian protocol
-      // This attempts to query actual Historian data with time range
-      var historicalQueryConfig = {
-        type: 'query',
-        dataSource: {
-          type: 'dd-historian',
-          server: 'Erfstadt Historian',
-          tagNames: [tagName],
-          startTime: startTime.toISOString(),
-          endTime: endTime.toISOString(),
-          samplingMode: 'Interpolated',
-          calculationMode: 'Average',
-          intervalCount: 24 // 24 points for 24 hours
-        }
-      };
-      
-      // Try to execute the query
-      if (typeof EMBED.executeQuery === 'function') {
-        EMBED.executeQuery(historicalQueryConfig, function(result) {
-          console.log('[BIOGAS] Historical query SUCCESS:', result);
-          if (callback) callback(result);
-        }, function(error) {
-          console.log('[BIOGAS] Historical query FAILED:', error);
-          if (callback) callback(null);
-        });
-      } else {
-        console.log('[BIOGAS] EMBED.executeQuery not available, using simulated data');
-        if (callback) callback(null);
-      }
-    } catch (error) {
-      console.error('[BIOGAS] Error querying Historian:', error);
-      if (callback) callback(null);
-    }
-  };
-
-  // Parse Historian historical response
-  var parseHistorianHistory = function(historianData) {
-    if (!historianData || !historianData.rows || historianData.rows.length === 0) {
-      console.log('[BIOGAS] No historical data in response');
-      return null;
-    }
-    
-    console.log('[BIOGAS] Parsing', historianData.rows.length, 'historical data points');
-    
-    var result = [];
-    historianData.rows.forEach(function(row) {
-      var timestamp = new Date(row.Timestamp || row.timestamp);
-      var value = parseFloat(row.Value || row.value);
-      
-      if (!isNaN(value)) {
-        result.push({
-          time: timestamp,
-          value: value
-        });
-      }
-    });
-    
-    return result.sort(function(a, b) { return a.time - b.time; });
-  };
-
   var drawChart = function(canvas, data, unit) {
     var ctx = canvas.getContext('2d');
     var width = canvas.width;
@@ -385,65 +321,53 @@
     row.after(historyRow);
     row.addClass('expanded');
     
-    // Calculate time ranges
-    var now = new Date();
-    var twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    var sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    
-    // Try to query REAL historical data from Historian
-    queryHistorianHistory(tagName, twentyFourHoursAgo, now, function(historianResult) {
-      var hourlyData = null;
-      var dataSource = '(Simuliert)'; // Default to simulated
-      
-      if (historianResult) {
-        hourlyData = parseHistorianHistory(historianResult);
-        if (hourlyData && hourlyData.length > 0) {
-          dataSource = '(Historian)';
-          console.log('[BIOGAS] Using REAL Historian data:', hourlyData.length, 'points');
-        }
-      }
-      
-      // Fallback to simulated if no real data
-      if (!hourlyData || hourlyData.length === 0) {
-        console.log('[BIOGAS] Using simulated data as fallback');
-        hourlyData = generate24HourData(currentValue);
-        dataSource = '(Simuliert)';
-      }
-      
-      // Generate daily averages (for now still simulated - would need separate daily query)
-      var dailyData = generateDailyAverages(currentValue);
-      
-      // Build UI
-      historyContent.empty();
-      
-      var tableContainer = $('<div class="history-table-container"></div>');
-      var tableHTML = '<table class="history-table">' +
-        '<thead><tr><th>' + t.dateLabel + '</th><th>' + t.avgLabel + ' ' + unit + '</th></tr></thead>' +
-        '<tbody>';
-      
-      for (var i = 0; i < dailyData.length; i++) {
-        tableHTML += '<tr>' +
-          '<td>' + dailyData[i].date + '</td>' +
-          '<td>' + dailyData[i].average.toFixed(1) + '</td>' +
-          '</tr>';
-      }
-      
-      tableHTML += '</tbody></table>';
-      tableContainer.html(tableHTML);
-      
-      var chartContainer = $('<div class="history-chart-container"></div>');
-      var chartTitle = locale === 'DE' ? 
-        'Letzte 24 Stunden ' + dataSource : 
-        'Last 24 Hours ' + dataSource;
-      chartContainer.append('<div class="chart-title">' + chartTitle + '</div>');
-      var canvas = $('<canvas class="chart-canvas" width="1400" height="400"></canvas>');
-      chartContainer.append(canvas);
-      
-      historyContent.append(tableContainer);
-      historyContent.append(chartContainer);
-      
-      drawChart(canvas[0], hourlyData, unit);
-    });
+    // Check if we have real historical data in cache
+    var hourlyData = null;
+    var dataSource = '(Simuliert)'; // Default to simulated
+
+    if (historicalCache[tagName] && historicalCache[tagName].length > 0) {
+      hourlyData = historicalCache[tagName];
+      dataSource = '(Historian)';
+      console.log('[BIOGAS] Using REAL Historian data from cache:', hourlyData.length, 'points');
+    } else {
+      console.log('[BIOGAS] No historical data in cache, using simulated data');
+      hourlyData = generate24HourData(currentValue);
+      dataSource = '(Simuliert)';
+    }
+
+    // Generate daily averages (for now still simulated - would need separate daily query)
+    var dailyData = generateDailyAverages(currentValue);
+
+    // Build UI
+    historyContent.empty();
+
+    var tableContainer = $('<div class="history-table-container"></div>');
+    var tableHTML = '<table class="history-table">' +
+      '<thead><tr><th>' + t.dateLabel + '</th><th>' + t.avgLabel + ' ' + unit + '</th></tr></thead>' +
+      '<tbody>';
+
+    for (var i = 0; i < dailyData.length; i++) {
+      tableHTML += '<tr>' +
+        '<td>' + dailyData[i].date + '</td>' +
+        '<td>' + dailyData[i].average.toFixed(1) + '</td>' +
+        '</tr>';
+    }
+
+    tableHTML += '</tbody></table>';
+    tableContainer.html(tableHTML);
+
+    var chartContainer = $('<div class="history-chart-container"></div>');
+    var chartTitle = locale === 'DE' ?
+      'Letzte 24 Stunden ' + dataSource :
+      'Last 24 Hours ' + dataSource;
+    chartContainer.append('<div class="chart-title">' + chartTitle + '</div>');
+    var canvas = $('<canvas class="chart-canvas" width="1400" height="400"></canvas>');
+    chartContainer.append(canvas);
+
+    historyContent.append(tableContainer);
+    historyContent.append(chartContainer);
+
+    drawChart(canvas[0], hourlyData, unit);
   };
 
   var addClickHandlers = function() {
@@ -484,19 +408,62 @@
   };
 
   console.log('[BIOGAS] Query data type:', queryData.type);
-  
+
   // Initialize UI labels
   initializeLabels();
-  
+
   if (EMBED.fieldTypeIsQuery(queryData)) {
     console.log('[BIOGAS] Query mode - subscribing to changes');
-    
+
     EMBED.subscribeFieldToQueryChange(queryData, function(rows) {
       console.log('[BIOGAS] Query data received!');
       processQueryData(rows);
     });
-    
+
     console.log('[BIOGAS] Subscription active');
+  }
+
+  // Subscribe to historical data if available
+  if (historicalData && EMBED.fieldTypeIsQuery(historicalData)) {
+    console.log('[BIOGAS] Historical data query detected - subscribing');
+
+    EMBED.subscribeFieldToQueryChange(historicalData, function(rows) {
+      console.log('[BIOGAS] Historical data received:', rows.length, 'rows');
+
+      // Clear previous cache
+      historicalCache = {};
+
+      // Organize historical data by tag name
+      rows.forEach(function(row) {
+        var tagName = row.Name || row.name;
+        var value = row.Value || row.value;
+        var timestamp = row.Timestamp || row.timestamp;
+
+        if (tagName && value !== undefined && value !== null && timestamp) {
+          if (!historicalCache[tagName]) {
+            historicalCache[tagName] = [];
+          }
+
+          historicalCache[tagName].push({
+            time: new Date(timestamp),
+            value: parseFloat(value)
+          });
+        }
+      });
+
+      // Sort each tag's historical data by time
+      for (var tagName in historicalCache) {
+        historicalCache[tagName].sort(function(a, b) {
+          return a.time - b.time;
+        });
+      }
+
+      console.log('[BIOGAS] Historical cache built for', Object.keys(historicalCache).length, 'tags');
+    });
+
+    console.log('[BIOGAS] Historical data subscription active');
+  } else {
+    console.log('[BIOGAS] No historical data query configured - will use simulated data');
   }
 
   console.log('[BIOGAS] Plugin initialized successfully');
