@@ -9,22 +9,44 @@
 
 ## 📋 Recent Updates Log
 
-### Update: 2024-12-03 - CRITICAL FIX: Chart.js CDN 404 Error
+### Update: 2024-12-03 - INVESTIGATION: External CDN Not Supported by Operations Hub
+**Status:** IN PROGRESS - Awaiting User Input
 **Completed by:** Claude Code AI
 
-**Issue:** Widget failed to load due to Chart.js CDN returning 404 error
-- Previous CDN: `https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js` (404 error)
-- New CDN: `https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js` (Cloudflare CDN)
+**Root Cause Analysis:**
+Widget fails to load due to Chart.js CDN returning 404 error. Systematic investigation revealed:
 
-**Fix:**
-- ✅ Changed Chart.js CDN provider from jsDelivr to cdnjs (Cloudflare)
-- ✅ Updated `manifest.json` line 19 with new CDN URL
-- ✅ Cloudflare CDN is generally more stable and reliable
+**CDNs Tested (All Failed):**
+1. ❌ jsDelivr: `https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js` (404)
+2. ❌ cdnjs: `https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js` (404)
+3. ❌ unpkg: `https://unpkg.com/chart.js@3.9.1/dist/chart.min.js` (404)
+
+**Key Finding:**
+- Examined GEPivotGrid reference widget - uses `"scripts": []` (empty)
+- No GE Operations Hub widgets use external CDN scripts
+- **Conclusion: Operations Hub does NOT support loading external libraries via CDN**
+
+**Solution Required:**
+Chart.js must be bundled directly with the widget. Two options:
+
+**Option 1: Bundle Chart.js (Recommended)**
+- User downloads Chart.js 3.9.1 from: https://unpkg.com/chart.js@3.9.1/dist/chart.min.js
+- Save as `BiogasDisplay/chart.min.js`
+- Load directly in widget (prepend to main.js or load in HTML)
+- Remove/empty scripts array in manifest.json
+
+**Option 2: Custom Lightweight Chart**
+- Build custom canvas-based charting solution
+- No external dependencies
+- Less polished but functional
+
+**Current Status:**
+- Awaiting user decision on approach
+- Network download blocked from development environment
+- manifest.json currently set to unpkg (non-functional)
 
 **Files Modified:**
-- `BiogasDisplay/manifest.json` - Updated scripts array with new CDN URL
-
-**Result:** Widget should now load properly with working Chart.js library
+- `BiogasDisplay/manifest.json` - Tested multiple CDN URLs (currently unpkg)
 
 ---
 
