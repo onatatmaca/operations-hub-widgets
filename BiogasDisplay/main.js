@@ -249,18 +249,27 @@
     return data.reverse();
   };
 
-  var generate24HourData = function(currentValue) {
+  var generate24HourData = function(currentValue, unit) {
     var data = [];
     var now = new Date();
 
-    // Generate data points every hour for 24 hours (25 points total)
-    for (var i = 24; i >= 0; i--) {
-      var time = new Date(now.getTime() - (i * 60 * 60 * 1000)); // Proper time calculation
-      time.setMinutes(0);  // Reset minutes for clean hourly marks
-      time.setSeconds(0);
-      time.setMilliseconds(0);
+    // Generate data points every 15 minutes for 24 hours (97 points)
+    var totalMinutes = 24 * 60; // 1440 minutes
+    var intervalMinutes = 15;
+    var numPoints = Math.floor(totalMinutes / intervalMinutes); // 96 points
 
-      var value = currentValue * (0.85 + Math.random() * 0.3);
+    for (var i = numPoints; i >= 0; i--) {
+      var minutesAgo = i * intervalMinutes;
+      var time = new Date(now.getTime() - (minutesAgo * 60 * 1000));
+
+      // Generate realistic variation
+      var variation = 0.85 + Math.random() * 0.3; // 0.85 to 1.15
+      var value = currentValue * variation;
+
+      // Clamp percentage values to 0-100
+      if (unit === '%') {
+        value = Math.max(0, Math.min(100, value));
+      }
 
       data.push({
         time: time,
@@ -268,23 +277,29 @@
       });
     }
 
+    console.log('[BIOGAS] Generated 24h data:', data.length, 'points, first:', data[0].time.toLocaleTimeString(), 'last:', data[data.length-1].toLocaleTimeString());
     return data;
   };
 
-  // Generate 7-day data with 6-hour sampling
-  var generate7DayData = function(currentValue) {
+  // Generate 7-day data with 2-hour sampling (85 points)
+  var generate7DayData = function(currentValue, unit) {
     var data = [];
     var now = new Date();
-    var hoursIn7Days = 7 * 24;
-    var sampleInterval = 6; // Sample every 6 hours
 
-    for (var i = hoursIn7Days; i >= 0; i -= sampleInterval) {
-      var time = new Date(now.getTime() - (i * 60 * 60 * 1000));
-      time.setMinutes(0);
-      time.setSeconds(0);
-      time.setMilliseconds(0);
+    var hoursIn7Days = 7 * 24; // 168 hours
+    var sampleInterval = 2; // Every 2 hours
+    var numPoints = Math.floor(hoursIn7Days / sampleInterval); // 84 points
 
-      var value = currentValue * (0.80 + Math.random() * 0.4);
+    for (var i = numPoints; i >= 0; i--) {
+      var hoursAgo = i * sampleInterval;
+      var time = new Date(now.getTime() - (hoursAgo * 60 * 60 * 1000));
+
+      var variation = 0.80 + Math.random() * 0.4; // 0.80 to 1.20
+      var value = currentValue * variation;
+
+      if (unit === '%') {
+        value = Math.max(0, Math.min(100, value));
+      }
 
       data.push({
         time: time,
@@ -292,23 +307,29 @@
       });
     }
 
+    console.log('[BIOGAS] Generated 7d data:', data.length, 'points, first:', data[0].time.toLocaleDateString(), 'last:', data[data.length-1].toLocaleDateString());
     return data;
   };
 
-  // Generate 1-month data with daily sampling
-  var generate1MonthData = function(currentValue) {
+  // Generate 1-month data with 12-hour sampling (61 points)
+  var generate1MonthData = function(currentValue, unit) {
     var data = [];
     var now = new Date();
-    var daysInMonth = 30;
 
-    for (var i = daysInMonth; i >= 0; i--) {
-      var time = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
-      time.setHours(0);
-      time.setMinutes(0);
-      time.setSeconds(0);
-      time.setMilliseconds(0);
+    var hoursIn30Days = 30 * 24; // 720 hours
+    var sampleInterval = 12; // Every 12 hours
+    var numPoints = Math.floor(hoursIn30Days / sampleInterval); // 60 points
 
-      var value = currentValue * (0.75 + Math.random() * 0.5);
+    for (var i = numPoints; i >= 0; i--) {
+      var hoursAgo = i * sampleInterval;
+      var time = new Date(now.getTime() - (hoursAgo * 60 * 60 * 1000));
+
+      var variation = 0.75 + Math.random() * 0.5; // 0.75 to 1.25
+      var value = currentValue * variation;
+
+      if (unit === '%') {
+        value = Math.max(0, Math.min(100, value));
+      }
 
       data.push({
         time: time,
@@ -316,6 +337,7 @@
       });
     }
 
+    console.log('[BIOGAS] Generated 1m data:', data.length, 'points, first:', data[0].time.toLocaleDateString(), 'last:', data[data.length-1].toLocaleDateString());
     return data;
   };
 
@@ -631,18 +653,21 @@
       if (range === '24h') {
         if (historicalCache[tagName] && historicalCache[tagName].length > 0) {
           data = historicalCache[tagName];
-          if (data.length < 24) {
-            data = interpolateHistoricalData(data, 48);
+          console.log('[BIOGAS] Using cached historical data for 24h:', data.length, 'points');
+          if (data.length < 96) {
+            console.log('[BIOGAS] Interpolating cached data to 96 points');
+            data = interpolateHistoricalData(data, 96);
           }
         } else {
-          data = generate24HourData(currentValue);
+          console.log('[BIOGAS] No cached data, generating simulated 24h data');
+          data = generate24HourData(currentValue, unit);
         }
         title = t.last24Hours;
       } else if (range === '7d') {
-        data = generate7DayData(currentValue);
+        data = generate7DayData(currentValue, unit);
         title = t.last7Days;
       } else if (range === '1m') {
-        data = generate1MonthData(currentValue);
+        data = generate1MonthData(currentValue, unit);
         title = t.last1Month;
       }
 
