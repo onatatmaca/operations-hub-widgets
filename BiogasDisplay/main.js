@@ -213,20 +213,64 @@
   var generate24HourData = function(currentValue) {
     var data = [];
     var now = new Date();
-    
+
+    // Generate data points every hour for 24 hours (25 points total)
     for (var i = 24; i >= 0; i--) {
       var time = new Date(now);
       time.setHours(time.getHours() - i);
-      
+
       var value = currentValue * (0.85 + Math.random() * 0.3);
-      
+
       data.push({
         time: time,
         value: value
       });
     }
-    
+
     return data;
+  };
+
+  // Interpolate historical data to ensure smooth curves
+  var interpolateHistoricalData = function(data, minPoints) {
+    if (!data || data.length === 0) return [];
+    if (data.length >= minPoints) return data;
+
+    console.log('[BIOGAS] Interpolating data from', data.length, 'to', minPoints, 'points');
+
+    var interpolated = [];
+    var pointsToGenerate = minPoints;
+    var segmentSize = (data.length - 1) / (pointsToGenerate - 1);
+
+    for (var i = 0; i < pointsToGenerate; i++) {
+      var index = i * segmentSize;
+      var lowerIndex = Math.floor(index);
+      var upperIndex = Math.ceil(index);
+      var fraction = index - lowerIndex;
+
+      if (upperIndex >= data.length) {
+        upperIndex = data.length - 1;
+        lowerIndex = upperIndex;
+        fraction = 0;
+      }
+
+      var lowerPoint = data[lowerIndex];
+      var upperPoint = data[upperIndex];
+
+      // Linear interpolation for value
+      var interpolatedValue = lowerPoint.value + (upperPoint.value - lowerPoint.value) * fraction;
+
+      // Time interpolation
+      var lowerTime = lowerPoint.time.getTime();
+      var upperTime = upperPoint.time.getTime();
+      var interpolatedTime = new Date(lowerTime + (upperTime - lowerTime) * fraction);
+
+      interpolated.push({
+        time: interpolatedTime,
+        value: interpolatedValue
+      });
+    }
+
+    return interpolated;
   };
 
   // Store chart instance to destroy on re-render
@@ -250,7 +294,7 @@
       chartInstance.destroy();
     }
 
-    // Prepare data for Chart.js
+    // Prepare data for Chart.js - show fewer labels for cleaner look
     var labels = data.map(function(d) {
       var hours = d.time.getHours();
       var minutes = d.time.getMinutes();
@@ -258,6 +302,13 @@
     });
 
     var values = data.map(function(d) { return d.value; });
+
+    // Find min/max for better axis scaling
+    var minValue = Math.min.apply(null, values);
+    var maxValue = Math.max.apply(null, values);
+    var range = maxValue - minValue;
+    var yMin = Math.floor((minValue - range * 0.1) * 10) / 10;
+    var yMax = Math.ceil((maxValue + range * 0.1) * 10) / 10;
 
     // Create Chart.js chart
     var ctx = canvas.getContext('2d');
@@ -269,32 +320,52 @@
           label: unit,
           data: values,
           borderColor: '#82dffe',
-          backgroundColor: 'rgba(130, 223, 254, 0.1)',
-          borderWidth: 3,
+          backgroundColor: 'rgba(130, 223, 254, 0.15)',
+          borderWidth: 2.5,
           pointBackgroundColor: '#86f37a',
-          pointBorderColor: '#86f37a',
-          pointRadius: 5,
-          pointHoverRadius: 7,
-          tension: 0.1,
-          fill: true
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: '#86f37a',
+          pointHoverBorderColor: '#fff',
+          pointHoverBorderWidth: 2,
+          tension: 0.4,
+          fill: true,
+          cubicInterpolationMode: 'monotone'
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        },
         plugins: {
           legend: {
             display: false
           },
           tooltip: {
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            titleColor: '#fff',
-            bodyColor: '#fff',
+            enabled: true,
+            backgroundColor: 'rgba(20, 20, 20, 0.95)',
+            titleColor: '#82dffe',
+            bodyColor: '#e0e0e0',
             borderColor: '#82dffe',
-            borderWidth: 1,
+            borderWidth: 2,
+            padding: 12,
+            titleFont: {
+              size: 13,
+              weight: 'bold'
+            },
+            bodyFont: {
+              size: 14,
+              weight: 'bold'
+            },
+            displayColors: false,
             callbacks: {
               label: function(context) {
-                return context.parsed.y.toFixed(1) + ' ' + unit;
+                return context.parsed.y.toFixed(2) + ' ' + unit;
               }
             }
           }
@@ -302,8 +373,28 @@
         scales: {
           x: {
             grid: {
-              color: 'rgba(100, 100, 100, 0.2)',
-              borderColor: '#555'
+              color: 'rgba(100, 100, 100, 0.3)',
+              borderColor: '#666',
+              lineWidth: 1
+            },
+            ticks: {
+              color: '#e0e0e0',
+              font: {
+                size: 11,
+                weight: '600'
+              },
+              maxRotation: 0,
+              autoSkipPadding: 25,
+              maxTicksLimit: 12
+            }
+          },
+          y: {
+            min: yMin,
+            max: yMax,
+            grid: {
+              color: 'rgba(100, 100, 100, 0.3)',
+              borderColor: '#666',
+              lineWidth: 1
             },
             ticks: {
               color: '#e0e0e0',
@@ -311,21 +402,7 @@
                 size: 12,
                 weight: 'bold'
               },
-              maxRotation: 0,
-              autoSkipPadding: 20
-            }
-          },
-          y: {
-            grid: {
-              color: 'rgba(100, 100, 100, 0.2)',
-              borderColor: '#555'
-            },
-            ticks: {
-              color: '#e0e0e0',
-              font: {
-                size: 13,
-                weight: 'bold'
-              },
+              padding: 8,
               callback: function(value) {
                 return value.toFixed(1) + ' ' + unit;
               }
@@ -379,6 +456,12 @@
     if (historicalCache[tagName] && historicalCache[tagName].length > 0) {
       hourlyData = historicalCache[tagName];
       console.log('[BIOGAS] Using REAL Historian data from cache:', hourlyData.length, 'points');
+
+      // Interpolate if we have too few points for a smooth curve
+      if (hourlyData.length < 24) {
+        hourlyData = interpolateHistoricalData(hourlyData, 48);
+        console.log('[BIOGAS] Interpolated to', hourlyData.length, 'points for smooth curve');
+      }
     } else {
       console.log('[BIOGAS] No historical data in cache, using simulated data');
       hourlyData = generate24HourData(currentValue);
@@ -408,8 +491,12 @@
     var chartContainer = $('<div class="history-chart-container"></div>');
     var chartTitle = locale === 'DE' ? 'Letzte 24 Stunden' : 'Last 24 Hours';
     chartContainer.append('<div class="chart-title">' + chartTitle + '</div>');
-    var canvas = $('<canvas class="chart-canvas" width="1400" height="400"></canvas>');
-    chartContainer.append(canvas);
+
+    // Create chart wrapper and canvas WITHOUT hardcoded dimensions
+    var chartWrapper = $('<div class="chart-wrapper"></div>');
+    var canvas = $('<canvas class="chart-canvas"></canvas>');
+    chartWrapper.append(canvas);
+    chartContainer.append(chartWrapper);
 
     historyContent.append(tableContainer);
     historyContent.append(chartContainer);
