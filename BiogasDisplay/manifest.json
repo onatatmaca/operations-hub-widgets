@@ -16,7 +16,7 @@
   "origin": "custom",
   "placeholder": "/custom/default/BiogasDisplay/placeholder.jpg",
   "preview": "/custom/default/BiogasDisplay/preview.jpg",
-  "scripts": ["https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"],
+  "scripts": [],
   "schema": {
     "draggable": true,
     "JSONSchema": {
