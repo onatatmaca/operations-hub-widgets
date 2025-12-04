@@ -86,9 +86,22 @@
   // Translations
   var translations = {
     DE: {
+      // Column headers
+      riId: 'R&I ID',
+      description: 'Beschreibung',
+      historianTag: 'Historian Tag',
+      value: 'Wert',
+      // Time ranges
+      last24Hours: 'Letzte 24 Stunden',
+      last7Days: 'Letzte 7 Tage',
+      last1Month: 'Letzter Monat',
+      // Chart buttons
+      btn24h: '24h',
+      btn7d: '7T',
+      btn1m: '1M',
+      // Other
       dateLabel: 'Datum',
       avgLabel: 'Ø',
-      last24Hours: 'Letzte 24 Stunden (Simuliert)',
       status: 'Status',
       updated: 'Aktualisiert',
       tags: 'Tags',
@@ -97,9 +110,22 @@
       generating: 'Historische Daten werden generiert...'
     },
     US: {
+      // Column headers
+      riId: 'R&I ID',
+      description: 'Description',
+      historianTag: 'Historian Tag',
+      value: 'Value',
+      // Time ranges
+      last24Hours: 'Last 24 Hours',
+      last7Days: 'Last 7 Days',
+      last1Month: 'Last Month',
+      // Chart buttons
+      btn24h: '24h',
+      btn7d: '7d',
+      btn1m: '1M',
+      // Other
       dateLabel: 'Date',
       avgLabel: 'Avg',
-      last24Hours: 'Last 24 Hours (Simulated)',
       status: 'Status',
       updated: 'Updated',
       tags: 'Tags',
@@ -108,9 +134,22 @@
       generating: 'Generating historical data...'
     },
     UK: {
+      // Column headers
+      riId: 'R&I ID',
+      description: 'Description',
+      historianTag: 'Historian Tag',
+      value: 'Value',
+      // Time ranges
+      last24Hours: 'Last 24 Hours',
+      last7Days: 'Last 7 Days',
+      last1Month: 'Last Month',
+      // Chart buttons
+      btn24h: '24h',
+      btn7d: '7d',
+      btn1m: '1M',
+      // Other
       dateLabel: 'Date',
       avgLabel: 'Avg',
-      last24Hours: 'Last 24 Hours (Simulated)',
       status: 'Status',
       updated: 'Updated',
       tags: 'Tags',
@@ -216,10 +255,60 @@
 
     // Generate data points every hour for 24 hours (25 points total)
     for (var i = 24; i >= 0; i--) {
-      var time = new Date(now);
-      time.setHours(time.getHours() - i);
+      var time = new Date(now.getTime() - (i * 60 * 60 * 1000)); // Proper time calculation
+      time.setMinutes(0);  // Reset minutes for clean hourly marks
+      time.setSeconds(0);
+      time.setMilliseconds(0);
 
       var value = currentValue * (0.85 + Math.random() * 0.3);
+
+      data.push({
+        time: time,
+        value: value
+      });
+    }
+
+    return data;
+  };
+
+  // Generate 7-day data with 6-hour sampling
+  var generate7DayData = function(currentValue) {
+    var data = [];
+    var now = new Date();
+    var hoursIn7Days = 7 * 24;
+    var sampleInterval = 6; // Sample every 6 hours
+
+    for (var i = hoursIn7Days; i >= 0; i -= sampleInterval) {
+      var time = new Date(now.getTime() - (i * 60 * 60 * 1000));
+      time.setMinutes(0);
+      time.setSeconds(0);
+      time.setMilliseconds(0);
+
+      var value = currentValue * (0.80 + Math.random() * 0.4);
+
+      data.push({
+        time: time,
+        value: value
+      });
+    }
+
+    return data;
+  };
+
+  // Generate 1-month data with daily sampling
+  var generate1MonthData = function(currentValue) {
+    var data = [];
+    var now = new Date();
+    var daysInMonth = 30;
+
+    for (var i = daysInMonth; i >= 0; i--) {
+      var time = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
+      time.setHours(0);
+      time.setMinutes(0);
+      time.setSeconds(0);
+      time.setMilliseconds(0);
+
+      var value = currentValue * (0.75 + Math.random() * 0.5);
 
       data.push({
         time: time,
@@ -273,10 +362,10 @@
     return interpolated;
   };
 
-  // Store chart instance to destroy on re-render
-  var chartInstance = null;
+  // Store chart instances by tag name to support multiple charts
+  var chartInstances = {};
 
-  var drawChart = function(canvas, data, unit) {
+  var drawChart = function(canvas, data, unit, tagName, timeRange) {
     if (!data || data.length === 0) {
       var ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -287,18 +376,27 @@
       return;
     }
 
-    console.log('[BIOGAS] Drawing chart with Chart.js,', data.length, 'data points');
+    console.log('[BIOGAS] Drawing chart for', tagName, 'with', data.length, 'data points');
 
-    // Destroy previous chart instance if exists
-    if (chartInstance) {
-      chartInstance.destroy();
+    // Destroy previous chart instance for this tag if exists
+    if (chartInstances[tagName]) {
+      chartInstances[tagName].destroy();
+      delete chartInstances[tagName];
     }
 
-    // Prepare data for Chart.js - show fewer labels for cleaner look
+    // Format labels based on time range
     var labels = data.map(function(d) {
-      var hours = d.time.getHours();
-      var minutes = d.time.getMinutes();
-      return hours + ':' + (minutes < 10 ? '0' : '') + minutes;
+      if (timeRange === '7d' || timeRange === '1m') {
+        // Show date for longer ranges
+        var day = d.time.getDate();
+        var month = d.time.getMonth() + 1;
+        return day + '/' + month;
+      } else {
+        // Show time for 24h range
+        var hours = d.time.getHours();
+        var minutes = d.time.getMinutes();
+        return hours + ':' + (minutes < 10 ? '0' : '') + minutes;
+      }
     });
 
     var values = data.map(function(d) { return d.value; });
@@ -307,12 +405,25 @@
     var minValue = Math.min.apply(null, values);
     var maxValue = Math.max.apply(null, values);
     var range = maxValue - minValue;
-    var yMin = Math.floor((minValue - range * 0.1) * 10) / 10;
-    var yMax = Math.ceil((maxValue + range * 0.1) * 10) / 10;
+
+    // Handle case where all values are the same (range = 0)
+    var yMin, yMax;
+    if (range === 0 || range < 0.01) {
+      // Add padding around the single value
+      yMin = Math.floor((minValue * 0.9) * 10) / 10;
+      yMax = Math.ceil((maxValue * 1.1) * 10) / 10;
+      if (yMin === yMax) {
+        yMin = minValue - 1;
+        yMax = maxValue + 1;
+      }
+    } else {
+      yMin = Math.floor((minValue - range * 0.1) * 10) / 10;
+      yMax = Math.ceil((maxValue + range * 0.1) * 10) / 10;
+    }
 
     // Create Chart.js chart
     var ctx = canvas.getContext('2d');
-    chartInstance = new Chart(ctx, {
+    chartInstances[tagName] = new Chart(ctx, {
       type: 'line',
       data: {
         labels: labels,
@@ -489,8 +600,19 @@
     tableContainer.html(tableHTML);
 
     var chartContainer = $('<div class="history-chart-container"></div>');
-    var chartTitle = locale === 'DE' ? 'Letzte 24 Stunden' : 'Last 24 Hours';
-    chartContainer.append('<div class="chart-title">' + chartTitle + '</div>');
+
+    // Chart header with title and time range buttons
+    var chartHeader = $('<div class="chart-header"></div>');
+    var chartTitle = $('<div class="chart-title">' + t.last24Hours + '</div>');
+
+    var timeRangeButtons = $('<div class="time-range-buttons"></div>');
+    var btn24h = $('<button class="time-range-btn active" data-range="24h">' + t.btn24h + '</button>');
+    var btn7d = $('<button class="time-range-btn" data-range="7d">' + t.btn7d + '</button>');
+    var btn1m = $('<button class="time-range-btn" data-range="1m">' + t.btn1m + '</button>');
+
+    timeRangeButtons.append(btn24h).append(btn7d).append(btn1m);
+    chartHeader.append(chartTitle).append(timeRangeButtons);
+    chartContainer.append(chartHeader);
 
     // Create chart wrapper and canvas WITHOUT hardcoded dimensions
     var chartWrapper = $('<div class="chart-wrapper"></div>');
@@ -501,7 +623,48 @@
     historyContent.append(tableContainer);
     historyContent.append(chartContainer);
 
-    drawChart(canvas[0], hourlyData, unit);
+    // Function to update chart based on time range
+    var updateChartForRange = function(range) {
+      var data;
+      var title;
+
+      if (range === '24h') {
+        if (historicalCache[tagName] && historicalCache[tagName].length > 0) {
+          data = historicalCache[tagName];
+          if (data.length < 24) {
+            data = interpolateHistoricalData(data, 48);
+          }
+        } else {
+          data = generate24HourData(currentValue);
+        }
+        title = t.last24Hours;
+      } else if (range === '7d') {
+        data = generate7DayData(currentValue);
+        title = t.last7Days;
+      } else if (range === '1m') {
+        data = generate1MonthData(currentValue);
+        title = t.last1Month;
+      }
+
+      chartTitle.text(title);
+      drawChart(canvas[0], data, unit, tagName, range);
+    };
+
+    // Button click handlers
+    timeRangeButtons.find('.time-range-btn').on('click', function() {
+      var btn = $(this);
+      var range = btn.data('range');
+
+      // Update active state
+      timeRangeButtons.find('.time-range-btn').removeClass('active');
+      btn.addClass('active');
+
+      // Update chart
+      updateChartForRange(range);
+    });
+
+    // Initial chart render (24h)
+    updateChartForRange('24h');
   };
 
   var addClickHandlers = function() {
@@ -513,10 +676,17 @@
 
   // Initialize UI labels based on locale
   var initializeLabels = function() {
+    // Status bar labels
     element.find('#statusTextLabel').text(t.status + ':');
     element.find('#updateTimeLabel').text(t.updated + ':');
     element.find('#tagCountLabel').text(t.tags + ':');
     element.find('#statusText').text(t.disconnected);
+
+    // Column header translations
+    element.find('.col-ri-id').text(t.riId);
+    element.find('.col-description').text(t.description);
+    element.find('.col-value').text(t.value);
+    element.find('.col-historian-tag').text(t.historianTag);
   };
 
   var processQueryData = function(rows) {
