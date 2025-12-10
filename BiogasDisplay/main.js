@@ -277,7 +277,7 @@
       });
     }
 
-    console.log('[BIOGAS] Generated 24h data:', data.length, 'points, first:', data[0].time.toLocaleTimeString(), 'last:', data[data.length-1].toLocaleTimeString());
+    console.log('[BIOGAS] Generated 24h data:', data.length, 'points, first:', data[0].time.toLocaleTimeString(), 'last:', data[data.length-1].time.toLocaleTimeString());
     return data;
   };
 
@@ -307,7 +307,7 @@
       });
     }
 
-    console.log('[BIOGAS] Generated 7d data:', data.length, 'points, first:', data[0].time.toLocaleDateString(), 'last:', data[data.length-1].toLocaleDateString());
+    console.log('[BIOGAS] Generated 7d data:', data.length, 'points, first:', data[0].time.toLocaleDateString(), 'last:', data[data.length-1].time.toLocaleDateString());
     return data;
   };
 
@@ -337,7 +337,7 @@
       });
     }
 
-    console.log('[BIOGAS] Generated 1m data:', data.length, 'points, first:', data[0].time.toLocaleDateString(), 'last:', data[data.length-1].toLocaleDateString());
+    console.log('[BIOGAS] Generated 1m data:', data.length, 'points, first:', data[0].time.toLocaleDateString(), 'last:', data[data.length-1].time.toLocaleDateString());
     return data;
   };
 
@@ -664,23 +664,19 @@
       console.log('[BIOGAS] Current value:', currentValue, 'Unit:', unit, 'Tag:', tagName);
 
       if (range === '24h') {
-        // TEMPORARILY FORCE SIMULATED DATA FOR DEBUGGING
-        console.log('[BIOGAS] Generating simulated 24h data (forced)');
-        data = generate24HourData(currentValue, unit);
-
-        /* ORIGINAL CODE - Re-enable after debugging:
+        // Use REAL historian data if available
         if (historicalCache[tagName] && historicalCache[tagName].length > 0) {
           data = historicalCache[tagName];
-          console.log('[BIOGAS] Using cached historical data for 24h:', data.length, 'points');
+          console.log('[BIOGAS] Using REAL Historian data for 24h:', data.length, 'points');
+          // Need more points? Interpolate to 96
           if (data.length < 96) {
-            console.log('[BIOGAS] Interpolating cached data to 96 points');
+            console.log('[BIOGAS] Interpolating from', data.length, 'to 96 points for smooth curve');
             data = interpolateHistoricalData(data, 96);
           }
         } else {
-          console.log('[BIOGAS] No cached data, generating simulated 24h data');
+          console.log('[BIOGAS] WARNING: No historian data available, using simulated data');
           data = generate24HourData(currentValue, unit);
         }
-        */
         title = t.last24Hours;
       } else if (range === '7d') {
         console.log('[BIOGAS] Generating simulated 7d data');
