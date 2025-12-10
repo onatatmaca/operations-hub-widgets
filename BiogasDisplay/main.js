@@ -398,7 +398,14 @@
       return;
     }
 
-    console.log('[BIOGAS] Drawing chart for', tagName, 'with', data.length, 'data points');
+    console.log('[BIOGAS] ========== DRAWING CHART ==========');
+    console.log('[BIOGAS] Tag:', tagName, 'Range:', timeRange, 'Points:', data.length);
+    console.log('[BIOGAS] First 3 timestamps:',
+      data.slice(0, 3).map(function(d) { return d.time.toLocaleString(); }).join(', '));
+    console.log('[BIOGAS] Last 3 timestamps:',
+      data.slice(-3).map(function(d) { return d.time.toLocaleString(); }).join(', '));
+    console.log('[BIOGAS] All timestamps unique?',
+      new Set(data.map(function(d) { return d.time.getTime(); })).size === data.length);
 
     // Destroy previous chart instance for this tag if exists
     if (chartInstances[tagName]) {
@@ -420,6 +427,9 @@
         return hours + ':' + (minutes < 10 ? '0' : '') + minutes;
       }
     });
+
+    console.log('[BIOGAS] First 5 labels:', labels.slice(0, 5).join(', '));
+    console.log('[BIOGAS] Last 5 labels:', labels.slice(-5).join(', '));
 
     var values = data.map(function(d) { return d.value; });
 
@@ -650,7 +660,15 @@
       var data;
       var title;
 
+      console.log('[BIOGAS] ========== UPDATE CHART FOR RANGE:', range, '==========');
+      console.log('[BIOGAS] Current value:', currentValue, 'Unit:', unit, 'Tag:', tagName);
+
       if (range === '24h') {
+        // TEMPORARILY FORCE SIMULATED DATA FOR DEBUGGING
+        console.log('[BIOGAS] Generating simulated 24h data (forced)');
+        data = generate24HourData(currentValue, unit);
+
+        /* ORIGINAL CODE - Re-enable after debugging:
         if (historicalCache[tagName] && historicalCache[tagName].length > 0) {
           data = historicalCache[tagName];
           console.log('[BIOGAS] Using cached historical data for 24h:', data.length, 'points');
@@ -662,15 +680,19 @@
           console.log('[BIOGAS] No cached data, generating simulated 24h data');
           data = generate24HourData(currentValue, unit);
         }
+        */
         title = t.last24Hours;
       } else if (range === '7d') {
+        console.log('[BIOGAS] Generating simulated 7d data');
         data = generate7DayData(currentValue, unit);
         title = t.last7Days;
       } else if (range === '1m') {
+        console.log('[BIOGAS] Generating simulated 1m data');
         data = generate1MonthData(currentValue, unit);
         title = t.last1Month;
       }
 
+      console.log('[BIOGAS] Data generated, length:', data ? data.length : 0);
       chartTitle.text(title);
       drawChart(canvas[0], data, unit, tagName, range);
     };
