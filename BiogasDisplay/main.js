@@ -235,10 +235,10 @@
     var data = [];
     var now = new Date();
 
-    // Generate data points every 15 minutes for 24 hours (97 points)
+    // Generate data points every 30 minutes for 24 hours (48 points)
     var totalMinutes = 24 * 60; // 1440 minutes
-    var intervalMinutes = 15;
-    var numPoints = Math.floor(totalMinutes / intervalMinutes); // 96 points
+    var intervalMinutes = 30;
+    var numPoints = Math.floor(totalMinutes / intervalMinutes); // 48 points
 
     for (var i = numPoints; i >= 0; i--) {
       var minutesAgo = i * intervalMinutes;
@@ -582,10 +582,10 @@
       if (historicalCache[tagName] && historicalCache[tagName].length > 0) {
         data = historicalCache[tagName];
         console.log('[BIOGAS] Using REAL Historian data for 24h:', data.length, 'points');
-        // Need more points? Interpolate to 96
-        if (data.length < 96) {
-          console.log('[BIOGAS] Interpolating from', data.length, 'to 96 points for smooth curve');
-          data = interpolateHistoricalData(data, 96);
+        // Need more points? Interpolate to 48
+        if (data.length < 48) {
+          console.log('[BIOGAS] Interpolating from', data.length, 'to 48 points for smooth curve');
+          data = interpolateHistoricalData(data, 48);
         }
       } else {
         console.log('[BIOGAS] WARNING: No historian data available, using simulated data');
