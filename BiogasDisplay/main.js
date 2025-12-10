@@ -93,12 +93,6 @@
       value: 'Wert',
       // Time ranges
       last24Hours: 'Letzte 24 Stunden',
-      last7Days: 'Letzte 7 Tage',
-      last1Month: 'Letzter Monat',
-      // Chart buttons
-      btn24h: '24h',
-      btn7d: '7T',
-      btn1m: '1M',
       // Other
       dateLabel: 'Datum',
       avgLabel: 'Ø',
@@ -117,12 +111,6 @@
       value: 'Value',
       // Time ranges
       last24Hours: 'Last 24 Hours',
-      last7Days: 'Last 7 Days',
-      last1Month: 'Last Month',
-      // Chart buttons
-      btn24h: '24h',
-      btn7d: '7d',
-      btn1m: '1M',
       // Other
       dateLabel: 'Date',
       avgLabel: 'Avg',
@@ -141,12 +129,6 @@
       value: 'Value',
       // Time ranges
       last24Hours: 'Last 24 Hours',
-      last7Days: 'Last 7 Days',
-      last1Month: 'Last Month',
-      // Chart buttons
-      btn24h: '24h',
-      btn7d: '7d',
-      btn1m: '1M',
       // Other
       dateLabel: 'Date',
       avgLabel: 'Avg',
@@ -281,65 +263,6 @@
     return data;
   };
 
-  // Generate 7-day data with 2-hour sampling (85 points)
-  var generate7DayData = function(currentValue, unit) {
-    var data = [];
-    var now = new Date();
-
-    var hoursIn7Days = 7 * 24; // 168 hours
-    var sampleInterval = 2; // Every 2 hours
-    var numPoints = Math.floor(hoursIn7Days / sampleInterval); // 84 points
-
-    for (var i = numPoints; i >= 0; i--) {
-      var hoursAgo = i * sampleInterval;
-      var time = new Date(now.getTime() - (hoursAgo * 60 * 60 * 1000));
-
-      var variation = 0.80 + Math.random() * 0.4; // 0.80 to 1.20
-      var value = currentValue * variation;
-
-      if (unit === '%') {
-        value = Math.max(0, Math.min(100, value));
-      }
-
-      data.push({
-        time: time,
-        value: value
-      });
-    }
-
-    console.log('[BIOGAS] Generated 7d data:', data.length, 'points, first:', data[0].time.toLocaleDateString(), 'last:', data[data.length-1].time.toLocaleDateString());
-    return data;
-  };
-
-  // Generate 1-month data with 12-hour sampling (61 points)
-  var generate1MonthData = function(currentValue, unit) {
-    var data = [];
-    var now = new Date();
-
-    var hoursIn30Days = 30 * 24; // 720 hours
-    var sampleInterval = 12; // Every 12 hours
-    var numPoints = Math.floor(hoursIn30Days / sampleInterval); // 60 points
-
-    for (var i = numPoints; i >= 0; i--) {
-      var hoursAgo = i * sampleInterval;
-      var time = new Date(now.getTime() - (hoursAgo * 60 * 60 * 1000));
-
-      var variation = 0.75 + Math.random() * 0.5; // 0.75 to 1.25
-      var value = currentValue * variation;
-
-      if (unit === '%') {
-        value = Math.max(0, Math.min(100, value));
-      }
-
-      data.push({
-        time: time,
-        value: value
-      });
-    }
-
-    console.log('[BIOGAS] Generated 1m data:', data.length, 'points, first:', data[0].time.toLocaleDateString(), 'last:', data[data.length-1].time.toLocaleDateString());
-    return data;
-  };
 
   // Interpolate historical data to ensure smooth curves
   var interpolateHistoricalData = function(data, minPoints) {
@@ -633,17 +556,10 @@
 
     var chartContainer = $('<div class="history-chart-container"></div>');
 
-    // Chart header with title and time range buttons
+    // Chart header with title
     var chartHeader = $('<div class="chart-header"></div>');
     var chartTitle = $('<div class="chart-title">' + t.last24Hours + '</div>');
-
-    var timeRangeButtons = $('<div class="time-range-buttons"></div>');
-    var btn24h = $('<button class="time-range-btn active" data-range="24h">' + t.btn24h + '</button>');
-    var btn7d = $('<button class="time-range-btn" data-range="7d">' + t.btn7d + '</button>');
-    var btn1m = $('<button class="time-range-btn" data-range="1m">' + t.btn1m + '</button>');
-
-    timeRangeButtons.append(btn24h).append(btn7d).append(btn1m);
-    chartHeader.append(chartTitle).append(timeRangeButtons);
+    chartHeader.append(chartTitle);
     chartContainer.append(chartHeader);
 
     // Create chart wrapper and canvas WITHOUT hardcoded dimensions
@@ -655,59 +571,33 @@
     historyContent.append(tableContainer);
     historyContent.append(chartContainer);
 
-    // Function to update chart based on time range
-    var updateChartForRange = function(range) {
+    // Render 24-hour chart
+    var render24hChart = function() {
       var data;
-      var title;
 
-      console.log('[BIOGAS] ========== UPDATE CHART FOR RANGE:', range, '==========');
+      console.log('[BIOGAS] ========== RENDERING 24H CHART ==========');
       console.log('[BIOGAS] Current value:', currentValue, 'Unit:', unit, 'Tag:', tagName);
 
-      if (range === '24h') {
-        // Use REAL historian data if available
-        if (historicalCache[tagName] && historicalCache[tagName].length > 0) {
-          data = historicalCache[tagName];
-          console.log('[BIOGAS] Using REAL Historian data for 24h:', data.length, 'points');
-          // Need more points? Interpolate to 96
-          if (data.length < 96) {
-            console.log('[BIOGAS] Interpolating from', data.length, 'to 96 points for smooth curve');
-            data = interpolateHistoricalData(data, 96);
-          }
-        } else {
-          console.log('[BIOGAS] WARNING: No historian data available, using simulated data');
-          data = generate24HourData(currentValue, unit);
+      // Use REAL historian data if available
+      if (historicalCache[tagName] && historicalCache[tagName].length > 0) {
+        data = historicalCache[tagName];
+        console.log('[BIOGAS] Using REAL Historian data for 24h:', data.length, 'points');
+        // Need more points? Interpolate to 96
+        if (data.length < 96) {
+          console.log('[BIOGAS] Interpolating from', data.length, 'to 96 points for smooth curve');
+          data = interpolateHistoricalData(data, 96);
         }
-        title = t.last24Hours;
-      } else if (range === '7d') {
-        console.log('[BIOGAS] Generating simulated 7d data');
-        data = generate7DayData(currentValue, unit);
-        title = t.last7Days;
-      } else if (range === '1m') {
-        console.log('[BIOGAS] Generating simulated 1m data');
-        data = generate1MonthData(currentValue, unit);
-        title = t.last1Month;
+      } else {
+        console.log('[BIOGAS] WARNING: No historian data available, using simulated data');
+        data = generate24HourData(currentValue, unit);
       }
 
       console.log('[BIOGAS] Data generated, length:', data ? data.length : 0);
-      chartTitle.text(title);
-      drawChart(canvas[0], data, unit, tagName, range);
+      drawChart(canvas[0], data, unit, tagName, '24h');
     };
 
-    // Button click handlers
-    timeRangeButtons.find('.time-range-btn').on('click', function() {
-      var btn = $(this);
-      var range = btn.data('range');
-
-      // Update active state
-      timeRangeButtons.find('.time-range-btn').removeClass('active');
-      btn.addClass('active');
-
-      // Update chart
-      updateChartForRange(range);
-    });
-
-    // Initial chart render (24h)
-    updateChartForRange('24h');
+    // Initial chart render
+    render24hChart();
   };
 
   var addClickHandlers = function() {
