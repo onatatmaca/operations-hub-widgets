@@ -15,11 +15,11 @@
 
 ## 📋 Recent Updates Log
 
-### Update: 2024-12-15 - 🚀 NEXT MAJOR FEATURES: Hierarchical Grouping & Timeline Widget
-**Status:** PLANNING → IN PROGRESS 🔄
-**Started by:** Claude Code AI
+### Update: 2024-12-15 - 🚀 MAJOR FEATURES: Hierarchical Grouping & Timeline Widget
+**Status:** PHASE 1 COMPLETED ✅ | PHASE 2 PENDING
+**Completed by:** Claude Code AI
 
-**Features to Implement:**
+**Phase 1 - Infrastructure (COMPLETED ✅)**
 
 #### 1. **Hierarchical Grouping System** (Cluster → Anlage → Title → Tags)
 
@@ -186,10 +186,48 @@ translations = {
 - If JSON has `clusters` (new format): Render with full hierarchy
 - Support both formats simultaneously
 
+**What Was Completed in Phase 1:**
+
+1. ✅ **Translation Bug Fixed** - Pumpen section headers now use class-based approach
+2. ✅ **Excel Converter Updated** - Supports both old and new formats:
+   - Auto-detects format based on column B content (MS/AG = old, else = new)
+   - Old format: Title | R&I | Description | Unit | Variable
+   - New format: Cluster | Anlage | Title | R&I | Description | Unit | Variable | Timeline
+   - Outputs correct JSON structure for each format
+3. ✅ **Translations Added** - All new features have DE/US/UK translations:
+   - cluster, anlage, expandAll, collapseAll
+   - timeline, state, timeRange
+4. ✅ **Timeline Widget Function** - `createTimelineWidget()` in main.js:
+   - Parses historical data (discrete states 1-7)
+   - Groups consecutive states into colored segments
+   - Generates HTML with proper color mapping
+   - Includes hover tooltips with time ranges and state
+5. ✅ **CSS Styles Added**:
+   - Timeline widget styling (.timeline-widget, .timeline-segment)
+   - Collapsible section styles with smooth transitions
+   - Hierarchy header styles (cluster-header, anlage-header, title-header)
+   - Control buttons (expandAll/collapseAll)
+   - Responsive design for mobile
+
+**What Remains for Phase 2:**
+
+1. 🔲 **Dynamic JSON Loading** - Load JSON from bgaName property
+2. 🔲 **Hierarchical HTML Generation** - Build DOM dynamically for new format
+3. 🔲 **Collapse/Expand Logic** - JavaScript for interactive collapsible sections
+4. 🔲 **Timeline Integration** - Call createTimelineWidget() for timeline=1 tags
+5. 🔲 **Update Value Function** - Modify updateTagValue() to handle timeline widgets
+6. 🔲 **Test with Sample Data** - Create Erfstadt_Cluster_TEST.xlsx for testing
+
+**Technical Note:**
+Current implementation uses static HTML (index.html). Full hierarchical rendering requires:
+- Fetching JSON from `/custom/default/BiogasDisplay/datasets/${bgaName}.json`
+- Dynamically building HTML based on JSON structure
+- Maintaining backward compatibility with static HTML fallback
+
 ---
 
-### Update: 2024-12-15 - 🐛 BUG IDENTIFIED: Hardcoded English Headers
-**Status:** IDENTIFIED - FIX PENDING
+### Update: 2024-12-15 - 🐛 BUG FIXED: Hardcoded English Headers
+**Status:** ✅ FIXED
 
 **Bug Location:** `BiogasDisplay/index.html`, lines 183-192
 **Section:** PUMPEN (Pumps)
