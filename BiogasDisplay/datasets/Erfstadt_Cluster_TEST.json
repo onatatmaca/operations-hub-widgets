@@ -1,0 +1,522 @@
+{
+  "name": "Erfstadt_Cluster_TEST",
+  "sections": [
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "ROHWARE",
+          "unit": "MS008",
+          "variable": "Füllstand Lagerbehälter Rohware"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "ROHWARE",
+          "unit": "MS007",
+          "variable": "Temperatur Lagerbehälter Rohware"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "FERTIGWARE & PUMPENSUMPF",
+          "unit": "MS069",
+          "variable": "Füllstand Fertigware"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "FERTIGWARE & PUMPENSUMPF",
+          "unit": "MS067",
+          "variable": "Füllstand Pumpensumpf Fettabtrennung"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "DRUCK & TEMPERATUR",
+          "unit": "MS166",
+          "variable": "Druck Beschickungsleitung Zyklon"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "DRUCK & TEMPERATUR",
+          "unit": "MS151",
+          "variable": "Druck am Zerkleinerer AG03"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "DRUCK & TEMPERATUR",
+          "unit": "MS014",
+          "variable": "Temperatur Zulauf Hygienisierung"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "",
+          "unit": "",
+          "variable": ""
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "HYGIENISIERUNG 1",
+          "unit": "MS024",
+          "variable": "Füllstand Hygienisierungstank 1"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "HYGIENISIERUNG 1",
+          "unit": "MS022",
+          "variable": "untere Temperatur Hygienisierungstank 1"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "HYGIENISIERUNG 1",
+          "unit": "MS023",
+          "variable": "obere Temperatur Hygienisierungstank 1"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "",
+          "unit": "",
+          "variable": ""
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "HYGIENISIERUNG 2",
+          "unit": "MS036",
+          "variable": "Füllstand Hygienisierungstank 2"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "HYGIENISIERUNG 2",
+          "unit": "MS034",
+          "variable": "untere Temperatur Hygienisierungstank 2"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "HYGIENISIERUNG 2",
+          "unit": "MS035",
+          "variable": "obere Temperatur Hygienisierungstank 2"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "",
+          "unit": "",
+          "variable": ""
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "HYGIENISIERUNG 3",
+          "unit": "MS048",
+          "variable": "Füllstand Hygienisierungstank 3"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "HYGIENISIERUNG 3",
+          "unit": "MS046",
+          "variable": "untere Temperatur Hygienisierungstank 3"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "HYGIENISIERUNG 3",
+          "unit": "MS047",
+          "variable": "obere Temperatur Hygienisierungstank 3"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "PUMPEN",
+          "unit": "AG17",
+          "variable": "Frequenz AG17 Kreiselpumpe vor Hydrozyklon"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "PUMPEN",
+          "unit": "AG17",
+          "variable": "Stromaufnahme AG17 Kreiselpumpe vor Hydrozyklon"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "PUMPEN",
+          "unit": "AG09",
+          "variable": "Frequenz AG09 Excenterschneckenpumpe zum Dekanter"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "PUMPEN",
+          "unit": "AG09",
+          "variable": "Stromaufnahme AG09 Excenterschneckenpumpe zum Dekanter"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "PUMPEN",
+          "unit": "AG10",
+          "variable": "Frequenz AG10 Excenterschneckenpumpe hinter Dekanter"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "PUMPEN",
+          "unit": "AG10",
+          "variable": "Stromaufnahme AG10 Excenterschneckenpumpe hinter Dekanter"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "PUMPEN",
+          "unit": "AG12",
+          "variable": "Frequenz AG12"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "PUMPEN",
+          "unit": "AG12",
+          "variable": "Stromaufnahme AG12"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "PUMPEN",
+          "unit": "AG04",
+          "variable": "Stromaufnahme AG04 Beschickung Wärmetauscher/Hygieniserung"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 1",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "PUMPEN",
+          "unit": "AG04",
+          "variable": "Frequenz AG04 Beschickung Wärmetauscher/Hygieniserung"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 2",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "FETTLAGERTANKS",
+          "unit": "MS073",
+          "variable": "Füllstand Fettlagertank 3"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 2",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "FETTLAGERTANKS",
+          "unit": "MS083",
+          "variable": "Temperatur Fettlagertank 3"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 2",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "FETTLAGERTANKS",
+          "unit": "MS084",
+          "variable": "Füllstand Fettlagertank 4"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 2",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "FETTLAGERTANKS",
+          "unit": "MS094",
+          "variable": "Temperatur Fettlagertank 4"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 2",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "FETTLAGERTANKS",
+          "unit": "MS095",
+          "variable": "Füllstand Fettlagertank 5"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 2",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "FETTLAGERTANKS",
+          "unit": "MS105",
+          "variable": "Temperatur Fettlagertank 5"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 2",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "FETTLAGERTANKS",
+          "unit": "MS106",
+          "variable": "Füllstand Fettlagertank 6"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 2",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "FETTLAGERTANKS",
+          "unit": "MS116",
+          "variable": "Temperatur Fettlagertank 6"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 2",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "FETTLAGERTANKS",
+          "unit": "MS117",
+          "variable": "Füllstand Fettlagertank 1"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 2",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "FETTLAGERTANKS",
+          "unit": "MS127",
+          "variable": "Temperatur Fettlagertank 1"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 2",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "FETTLAGERTANKS",
+          "unit": "MS128",
+          "variable": "Füllstand Fettlagertank 2"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 2",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "FETTLAGERTANKS",
+          "unit": "MS138",
+          "variable": "Temperatur Fettlagertank 2"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 2",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "TAGESMENGEN & DURCHFLUSS",
+          "unit": "",
+          "variable": "Tagesmenge zum Dekanter"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 2",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "TAGESMENGEN & DURCHFLUSS",
+          "unit": "",
+          "variable": "Tagesmenge Abwasser zum Rohwarentank"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 2",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "TAGESMENGEN & DURCHFLUSS",
+          "unit": "",
+          "variable": "Tagesmenge Abwasser zum Abwassertank"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 2",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "TAGESMENGEN & DURCHFLUSS",
+          "unit": "",
+          "variable": "Tagesmenge Brauchwasser"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 2",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "TAGESMENGEN & DURCHFLUSS",
+          "unit": "MS065",
+          "variable": "Durchfluss Zulauf Dekanter"
+        }
+      ]
+    },
+    {
+      "title": "CLUSTER 2",
+      "tags": [
+        {
+          "ri": "Erftstadt",
+          "description": "TAGESMENGEN & DURCHFLUSS",
+          "unit": "",
+          "variable": "Durchfluss Brauchwasser"
+        }
+      ]
+    }
+  ]
+}
