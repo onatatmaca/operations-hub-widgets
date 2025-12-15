@@ -66,66 +66,161 @@ def parse_excel_to_json(excel_path):
 
             all_rows.append(row_dict)
 
-        # Parse into sections
-        sections = []
-        current_section = None
+        # Detect format: Check if Col A/B look like cluster/anlage names (not tag IDs)
+        # Old format: Col A = Title (UPPERCASE), Col B = R&I ID (MS/AG prefix)
+        # New format: Col A = Cluster, Col B = Anlage, Col C = Title, Col D = R&I ID
+        first_row_with_data = next((r for r in all_rows if r), {})
+        col_a_first = first_row_with_data.get(0, '')
+        col_b_first = first_row_with_data.get(1, '')
 
-        for row_dict in all_rows:
-            if not row_dict:
-                continue
+        # If col_b looks like R&I ID (MS/AG prefix), it's old format
+        is_old_format = col_b_first.startswith('MS') or col_b_first.startswith('AG')
 
-            col_a = row_dict.get(0, '')
-            col_b = row_dict.get(1, '')
-            col_c = row_dict.get(2, '')
-            col_d = row_dict.get(3, '')
-            col_e = row_dict.get(4, '')
+        if is_old_format:
+            # OLD FORMAT: Parse into sections (backward compatibility)
+            sections = []
+            current_section = None
 
-            # If col_a has a value and it's a title (uppercase, not MS/AG prefix), start new section
-            is_title = col_a and col_a.isupper() and not col_a.startswith('MS') and not col_a.startswith('AG')
+            for row_dict in all_rows:
+                if not row_dict:
+                    continue
 
-            if is_title:
-                # Save previous section
-                if current_section:
-                    sections.append(current_section)
+                col_a = row_dict.get(0, '')
+                col_b = row_dict.get(1, '')
+                col_c = row_dict.get(2, '')
+                col_d = row_dict.get(3, '')
+                col_e = row_dict.get(4, '')
 
-                # Start new section
-                current_section = {
-                    'title': col_a,
-                    'tags': []
-                }
+                is_title = col_a and col_a.isupper() and not col_a.startswith('MS') and not col_a.startswith('AG')
 
-                # Add the tag data from this title row (columns B, C, D, E)
-                # Include even if R&I is missing - just need any data
-                if col_b or col_c or col_d or col_e:
-                    current_section['tags'].append({
-                        'ri': col_b,
-                        'description': col_c,
-                        'unit': col_d,
-                        'variable': col_e
+                if is_title:
+                    if current_section:
+                        sections.append(current_section)
+
+                    current_section = {
+                        'title': col_a,
+                        'tags': []
+                    }
+
+                    if col_b or col_c or col_d or col_e:
+                        current_section['tags'].append({
+                            'ri': col_b,
+                            'description': col_c,
+                            'unit': col_d,
+                            'variable': col_e,
+                            'timeline': '0'
+                        })
+                elif current_section:
+                    if col_b or col_c or col_d or col_e:
+                        current_section['tags'].append({
+                            'ri': col_b,
+                            'description': col_c,
+                            'unit': col_d,
+                            'variable': col_e,
+                            'timeline': '0'
+                        })
+
+            if current_section:
+                sections.append(current_section)
+
+            filename = os.path.splitext(os.path.basename(excel_path))[0]
+            output = {
+                'name': filename,
+                'sections': sections
+            }
+
+            total_tags = sum(len(s['tags']) for s in sections)
+            print(f"    ✓ Parsed {len(sections)} sections with {total_tags} tags (OLD FORMAT)")
+
+        else:
+            # NEW FORMAT: Parse into clusters → anlagen → sections
+            clusters = {}
+
+            for row_dict in all_rows:
+                if not row_dict:
+                    continue
+
+                cluster_name = row_dict.get(0, '').strip()
+                anlage_name = row_dict.get(1, '').strip()
+                title = row_dict.get(2, '').strip()
+                ri = row_dict.get(3, '').strip()
+                description = row_dict.get(4, '').strip()
+                unit = row_dict.get(5, '').strip()
+                variable = row_dict.get(6, '').strip()
+                timeline = row_dict.get(7, '0').strip() or '0'
+
+                # Skip if no useful data
+                if not (cluster_name or anlage_name or title or ri or description or variable):
+                    continue
+
+                # Create cluster if needed
+                if cluster_name and cluster_name not in clusters:
+                    clusters[cluster_name] = {}
+
+                # Use the last non-empty cluster name
+                if cluster_name:
+                    current_cluster = cluster_name
+                    current_cluster_dict = clusters[current_cluster]
+
+                    # Create anlage if needed
+                    if anlage_name and anlage_name not in current_cluster_dict:
+                        current_cluster_dict[anlage_name] = {}
+
+                    # Use the last non-empty anlage name
+                    if anlage_name:
+                        current_anlage = anlage_name
+                        current_anlage_dict = current_cluster_dict[current_anlage]
+
+                        # Create section if needed
+                        if title and title not in current_anlage_dict:
+                            current_anlage_dict[title] = []
+
+                        # Add tag
+                        if title and (ri or description or variable):
+                            current_anlage_dict[title].append({
+                                'ri': ri,
+                                'description': description,
+                                'unit': unit,
+                                'variable': variable,
+                                'timeline': timeline
+                            })
+
+            # Convert dict structure to list structure
+            clusters_list = []
+            for cluster_name, anlagen_dict in clusters.items():
+                anlagen_list = []
+                for anlage_name, sections_dict in anlagen_dict.items():
+                    sections_list = []
+                    for title, tags in sections_dict.items():
+                        sections_list.append({
+                            'title': title,
+                            'tags': tags
+                        })
+                    anlagen_list.append({
+                        'name': anlage_name,
+                        'sections': sections_list
                     })
-            elif current_section:
-                # This is a data row (col_a is empty, data in columns B, C, D, E)
-                # Include even if R&I is missing - just need any data
-                if col_b or col_c or col_d or col_e:
-                    current_section['tags'].append({
-                        'ri': col_b,
-                        'description': col_c,
-                        'unit': col_d,
-                        'variable': col_e
-                    })
+                clusters_list.append({
+                    'name': cluster_name,
+                    'anlagen': anlagen_list
+                })
 
-        if current_section:
-            sections.append(current_section)
+            filename = os.path.splitext(os.path.basename(excel_path))[0]
+            output = {
+                'name': filename,
+                'clusters': clusters_list
+            }
 
-        # Create output structure
-        filename = os.path.splitext(os.path.basename(excel_path))[0]
-        output = {
-            'name': filename,
-            'sections': sections
-        }
-
-        total_tags = sum(len(s['tags']) for s in sections)
-        print(f"    ✓ Parsed {len(sections)} sections with {total_tags} tags")
+            total_tags = sum(
+                len(tag)
+                for cluster in clusters_list
+                for anlage in cluster['anlagen']
+                for section in anlage['sections']
+                for tag in section['tags']
+            )
+            total_sections = sum(len(anlage['sections']) for cluster in clusters_list for anlage in cluster['anlagen'])
+            total_anlagen = sum(len(cluster['anlagen']) for cluster in clusters_list)
+            print(f"    ✓ Parsed {len(clusters_list)} clusters, {total_anlagen} anlagen, {total_sections} sections with {total_tags} tags (NEW FORMAT)")
 
         return output
 

@@ -91,8 +91,17 @@
       description: 'Beschreibung',
       historianTag: 'Historian Tag',
       value: 'Wert',
+      // Hierarchy
+      cluster: 'Cluster',
+      anlage: 'Anlage',
+      expandAll: 'Alle Erweitern',
+      collapseAll: 'Alle Reduzieren',
       // Time ranges
       last24Hours: 'Letzte 24 Stunden',
+      // Timeline
+      timeline: 'Zeitverlauf',
+      state: 'Status',
+      timeRange: 'Zeitraum',
       // Other
       dateLabel: 'Datum',
       avgLabel: 'Ø',
@@ -109,8 +118,17 @@
       description: 'Description',
       historianTag: 'Historian Tag',
       value: 'Value',
+      // Hierarchy
+      cluster: 'Cluster',
+      anlage: 'Plant',
+      expandAll: 'Expand All',
+      collapseAll: 'Collapse All',
       // Time ranges
       last24Hours: 'Last 24 Hours',
+      // Timeline
+      timeline: 'Timeline',
+      state: 'State',
+      timeRange: 'Time Range',
       // Other
       dateLabel: 'Date',
       avgLabel: 'Avg',
@@ -127,8 +145,17 @@
       description: 'Description',
       historianTag: 'Historian Tag',
       value: 'Value',
+      // Hierarchy
+      cluster: 'Cluster',
+      anlage: 'Plant',
+      expandAll: 'Expand All',
+      collapseAll: 'Collapse All',
       // Time ranges
       last24Hours: 'Last 24 Hours',
+      // Timeline
+      timeline: 'Timeline',
+      state: 'State',
+      timeRange: 'Time Range',
       // Other
       dateLabel: 'Date',
       avgLabel: 'Avg',
