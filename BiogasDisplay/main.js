@@ -91,8 +91,17 @@
       description: 'Beschreibung',
       historianTag: 'Historian Tag',
       value: 'Wert',
+      // Hierarchy
+      cluster: 'Cluster',
+      anlage: 'Anlage',
+      expandAll: 'Alle Erweitern',
+      collapseAll: 'Alle Reduzieren',
       // Time ranges
       last24Hours: 'Letzte 24 Stunden',
+      // Timeline
+      timeline: 'Zeitverlauf',
+      state: 'Status',
+      timeRange: 'Zeitraum',
       // Other
       dateLabel: 'Datum',
       avgLabel: 'Ø',
@@ -109,8 +118,17 @@
       description: 'Description',
       historianTag: 'Historian Tag',
       value: 'Value',
+      // Hierarchy
+      cluster: 'Cluster',
+      anlage: 'Plant',
+      expandAll: 'Expand All',
+      collapseAll: 'Collapse All',
       // Time ranges
       last24Hours: 'Last 24 Hours',
+      // Timeline
+      timeline: 'Timeline',
+      state: 'State',
+      timeRange: 'Time Range',
       // Other
       dateLabel: 'Date',
       avgLabel: 'Avg',
@@ -127,8 +145,17 @@
       description: 'Description',
       historianTag: 'Historian Tag',
       value: 'Value',
+      // Hierarchy
+      cluster: 'Cluster',
+      anlage: 'Plant',
+      expandAll: 'Expand All',
+      collapseAll: 'Collapse All',
       // Time ranges
       last24Hours: 'Last 24 Hours',
+      // Timeline
+      timeline: 'Timeline',
+      state: 'State',
+      timeRange: 'Time Range',
       // Other
       dateLabel: 'Date',
       avgLabel: 'Avg',
@@ -163,6 +190,82 @@
     } else {
       return date.toLocaleTimeString('en-GB');
     }
+  };
+
+  // Timeline state color mapping
+  var timelineColors = {
+    '1': '#9997FF', // light purple/blue
+    '2': '#FE81F8', // bright pink
+    '3': '#C40421', // red - alert/error
+    '4': '#339947', // green - normal operation
+    '5': '#339947', // green - normal operation
+    '6': '#339947', // green - normal operation
+    '7': '#C40421'  // red - alert/error
+  };
+
+  // Create timeline widget from historical data
+  var createTimelineWidget = function(tagName, historicalData) {
+    if (!historicalData || historicalData.length === 0) {
+      return '<div class="timeline-widget"><span class="timeline-no-data">--</span></div>';
+    }
+
+    // Group consecutive same states into segments
+    var segments = [];
+    var currentState = null;
+    var segmentStart = null;
+
+    for (var i = 0; i < historicalData.length; i++) {
+      var point = historicalData[i];
+      var state = Math.floor(point.value).toString();
+
+      if (state !== currentState) {
+        // Save previous segment
+        if (currentState !== null) {
+          segments.push({
+            state: currentState,
+            start: segmentStart,
+            end: point.time,
+            color: timelineColors[currentState] || '#666666'
+          });
+        }
+        // Start new segment
+        currentState = state;
+        segmentStart = point.time;
+      }
+    }
+
+    // Add final segment
+    if (currentState !== null) {
+      segments.push({
+        state: currentState,
+        start: segmentStart,
+        end: new Date(),
+        color: timelineColors[currentState] || '#666666'
+      });
+    }
+
+    // Calculate total duration
+    var totalDuration = segments.length > 0
+      ? (segments[segments.length - 1].end.getTime() - segments[0].start.getTime())
+      : 1;
+
+    // Build timeline HTML
+    var html = '<div class="timeline-widget">';
+    for (var i = 0; i < segments.length; i++) {
+      var segment = segments[i];
+      var duration = segment.end.getTime() - segment.start.getTime();
+      var widthPercent = (duration / totalDuration) * 100;
+
+      var startTime = formatTime(segment.start);
+      var endTime = formatTime(segment.end);
+      var tooltipText = t.state + ' ' + segment.state + ' | ' + startTime + ' - ' + endTime;
+
+      html += '<div class="timeline-segment" style="width: ' + widthPercent + '%; background-color: ' + segment.color + ';" ' +
+              'title="' + tooltipText + '" data-state="' + segment.state + '"></div>';
+    }
+    html += '</div>';
+
+    return html;
   };
 
   var updateTagValue = function(tagName, value, quality) {
@@ -235,10 +338,10 @@
     var data = [];
     var now = new Date();
 
-    // Generate data points every 15 minutes for 24 hours (97 points)
+    // Generate data points every 30 minutes for 24 hours (48 points)
     var totalMinutes = 24 * 60; // 1440 minutes
-    var intervalMinutes = 15;
-    var numPoints = Math.floor(totalMinutes / intervalMinutes); // 96 points
+    var intervalMinutes = 30;
+    var numPoints = Math.floor(totalMinutes / intervalMinutes); // 48 points
 
     for (var i = numPoints; i >= 0; i--) {
       var minutesAgo = i * intervalMinutes;
@@ -582,10 +685,10 @@
       if (historicalCache[tagName] && historicalCache[tagName].length > 0) {
         data = historicalCache[tagName];
         console.log('[BIOGAS] Using REAL Historian data for 24h:', data.length, 'points');
-        // Need more points? Interpolate to 96
-        if (data.length < 96) {
-          console.log('[BIOGAS] Interpolating from', data.length, 'to 96 points for smooth curve');
-          data = interpolateHistoricalData(data, 96);
+        // Need more points? Interpolate to 48
+        if (data.length < 48) {
+          console.log('[BIOGAS] Interpolating from', data.length, 'to 48 points for smooth curve');
+          data = interpolateHistoricalData(data, 48);
         }
       } else {
         console.log('[BIOGAS] WARNING: No historian data available, using simulated data');
