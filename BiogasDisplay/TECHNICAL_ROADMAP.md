@@ -5,9 +5,223 @@
 > **ALL documentation, updates, changes, and technical notes MUST be added to THIS file.**
 > **After every update, changes must be clearly documented here with date and description.**
 
+> **🌍 TRANSLATION POLICY**
+> **ALL new features MUST support multi-language translations (DE, US, UK)**
+> **ALL UI text, column headers, labels, and buttons MUST be translatable**
+> **ALL date/time displays MUST use locale-specific formatting**
+> **NEVER hardcode English text in HTML or JavaScript - always use the translations object**
+
 ---
 
 ## 📋 Recent Updates Log
+
+### Update: 2024-12-15 - 🚀 NEXT MAJOR FEATURES: Hierarchical Grouping & Timeline Widget
+**Status:** PLANNING → IN PROGRESS 🔄
+**Started by:** Claude Code AI
+
+**Features to Implement:**
+
+#### 1. **Hierarchical Grouping System** (Cluster → Anlage → Title → Tags)
+
+**Current Structure:**
+```
+Title (e.g., "HYGIENISIERUNG 3")
+  └─ Tags (individual measurements)
+```
+
+**New Structure:**
+```
+Cluster (Plant/Site group) - EXPANDED by default
+  └─ Anlage (Installation/Unit) - COLLAPSED by default
+      └─ Title (Section) - EXPANDED by default
+          └─ Tags (Measurements) - Always visible when Title expanded
+```
+
+**Collapsible Behavior:**
+- **If Cluster/Anlage columns are EMPTY**: Display old way (no collapse, all titles visible)
+- **If Cluster/Anlage columns have data**: Show full hierarchy with collapse/expand
+- **Default States:**
+  - Cluster level: EXPANDED (users see all clusters immediately)
+  - Anlage level: COLLAPSED (users click to expand)
+  - Title level: EXPANDED (users see sections immediately when Anlage is opened)
+  - Tags: Always visible when parent Title is expanded
+
+**UI Controls:**
+- Collapse/Expand icons (▼/▶) next to each collapsible header
+- "Expand All" / "Collapse All" buttons at top of widget
+- Smooth CSS transitions for expand/collapse animations
+- Remember user's expand/collapse state during session (optional)
+
+**Data Source:**
+- Column A: Cluster name
+- Column B: Anlage name
+- Column C: Title name (current structure)
+- Columns D-H: Tag data (R&I ID, Description, Unit, Variable, Timeline)
+
+**Excel/JSON Format:**
+```
+| Cluster    | Anlage     | Title            | R&I  | Description | Unit | Variable    | Timeline |
+|------------|------------|------------------|------|-------------|------|-------------|----------|
+| Erfstadt   | Anlage 1   | HYGIENISIERUNG 3 | MS048| Füllstand   | %    | STAT6.xxx   | 0        |
+| Erfstadt   | Anlage 1   | PUMPEN           | AG17 | Frequenz    | Hz   | STAT6.yyy   | 1        |
+```
+
+#### 2. **Timeline Widget for State Monitoring**
+
+**Purpose:** Visual timeline showing discrete state changes over 24 hours
+
+**Trigger:** Timeline column value = "1" (or "2" for hybrid mode)
+
+**Behavior:**
+- **Timeline = "0"**: Normal display (Value + Graph on click)
+- **Timeline = "1"**: Timeline widget REPLACES value column for that row
+- **Timeline = "2"**: Show BOTH timeline widget AND allow graph popup (future feature)
+
+**When Timeline = "1":**
+- Value column shows horizontal timeline bar (last 24 hours)
+- Clicking row does NOT open historical chart popup
+- Timeline is the only visualization needed
+
+**Timeline Widget Design:**
+```
+[========|=====|=========|====|==========]
+09:00   11:00 13:00    16:00 18:00    Now
+```
+
+**Color Mapping (Based on Historian Values 1-7):**
+```javascript
+Value 1 → #9997FF (light purple/blue)
+Value 2 → #FE81F8 (bright pink)
+Value 3 → #C40421 (red - alert/error)
+Value 4 → #339947 (green - normal operation)
+Value 5 → #339947 (green - normal operation)
+Value 6 → #339947 (green - normal operation)
+Value 7 → #C40421 (red - alert/error)
+```
+
+**Interaction:**
+- **Hover:** Show tooltip with:
+  - Time range (e.g., "14:23 - 15:47")
+  - State value (e.g., "State 3")
+  - Description/meaning (optional, can be added later)
+- **Visual Style:**
+  - Smooth gradient transitions between states (optional)
+  - Clear segment boundaries
+  - Rounded corners for modern look
+  - Subtle shadow for depth
+
+**Data Source:**
+- Uses same `historicalData` query (24-hour data)
+- Discrete states (values 1-7) instead of continuous measurements
+- Segments drawn based on state changes in time series
+
+**Implementation:**
+- CSS-based colored divs for timeline segments (performant)
+- JavaScript calculates segment widths based on duration
+- Tooltip using CSS :hover pseudo-class or JS event listeners
+
+#### 3. **Translation Requirements for New Features**
+
+**New Translation Keys Needed:**
+```javascript
+translations = {
+  DE: {
+    // Existing...
+    // New for hierarchy
+    cluster: 'Cluster',
+    anlage: 'Anlage',
+    expandAll: 'Alle Erweitern',
+    collapseAll: 'Alle Reduzieren',
+    // New for timeline
+    timeline: 'Zeitverlauf',
+    state: 'Status',
+    timeRange: 'Zeitraum',
+    // Keep existing riId, description, value, historianTag
+  },
+  US: { /* English translations */ },
+  UK: { /* British English translations */ }
+};
+```
+
+**Files to Modify:**
+1. `convert_excel_to_json.py` - Parse Cluster (Col A), Anlage (Col B), Timeline (Col H)
+2. `main.js` - Hierarchical rendering, collapse/expand logic, timeline widget
+3. `style.css` - Collapsible styles, timeline bar styles, animations
+4. `index.html` - Will be GENERATED dynamically (not static anymore)
+5. `TECHNICAL_ROADMAP.md` - This file (document all changes)
+
+**JSON Structure (New Format):**
+```json
+{
+  "name": "Erfstadt_Cluster_v1",
+  "clusters": [
+    {
+      "name": "Erfstadt",
+      "anlagen": [
+        {
+          "name": "Anlage 1",
+          "sections": [
+            {
+              "title": "HYGIENISIERUNG 3",
+              "tags": [
+                {
+                  "ri": "MS048",
+                  "description": "Füllstand",
+                  "unit": "%",
+                  "variable": "STAT6.133PME_A03_SCALE.F_CV",
+                  "timeline": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Backward Compatibility:**
+- If JSON has `sections` (old format): Render without hierarchy
+- If JSON has `clusters` (new format): Render with full hierarchy
+- Support both formats simultaneously
+
+---
+
+### Update: 2024-12-15 - 🐛 BUG IDENTIFIED: Hardcoded English Headers
+**Status:** IDENTIFIED - FIX PENDING
+
+**Bug Location:** `BiogasDisplay/index.html`, lines 183-192
+**Section:** PUMPEN (Pumps)
+
+**Problem:**
+```html
+<!-- WRONG - Hardcoded English (lines 187-190) -->
+<th>Equipment</th>
+<th>Description</th>
+<th>Historian Tag</th>
+<th>Value</th>
+```
+
+**Should Be:**
+```html
+<!-- CORRECT - Class-based translation -->
+<th class="col-ri-id">R&I ID</th>
+<th class="col-description">Description</th>
+<th class="col-value">Value</th>
+<th class="col-historian-tag">Historian Tag</th>
+```
+
+**Impact:**
+- PUMPEN section always shows English headers regardless of locale setting
+- Other sections (HYGIENISIERUNG 1-3, FETTLAGERTANKS, etc.) work correctly
+- Breaks German translation for that section
+
+**Fix Priority:** HIGH (will be fixed during hierarchical implementation)
+
+**Root Cause:** Manual HTML editing error - headers weren't updated to use class-based approach
+
+---
 
 ### Update: 2024-12-04 - ✅ MAJOR GRAPH IMPROVEMENTS: Professional Charts with Smooth Curves
 **Status:** COMPLETED ✅
