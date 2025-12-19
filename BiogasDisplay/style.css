@@ -493,3 +493,14 @@
         height: 20px;
     }
 }
+
+/* Hierarchy Controls */
+.hierarchy-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: rgba(20, 20, 20, 0.5);
+    border-radius: 4px;
+}
+
