@@ -23,8 +23,8 @@
       "bgaName": {
         "title": "BGA Name (Excel/JSON File)",
         "type": "string",
-        "default": "Erfstadt_Cluster_TEST",
-        "description": "Enter the name of the Excel/JSON file without extension (e.g., Erfstadt_Cluster_TEST)"
+        "default": "Erfstadt_v1",
+        "description": "Enter the name of the Excel/JSON file without extension (e.g., Erfstadt_v1)"
       },
       "liveDataHistorian": {
         "title": "Live Data Query (Historian) - For Old BGAs",

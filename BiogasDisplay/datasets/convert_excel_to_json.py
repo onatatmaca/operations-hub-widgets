@@ -66,58 +66,83 @@ def parse_excel_to_json(excel_path):
 
             all_rows.append(row_dict)
 
-        # Detect format: Check if Col A/B look like cluster/anlage names (not tag IDs)
-        # Old format: Col A = Title (UPPERCASE), Col B = R&I ID (MS/AG prefix)
+        # Detect format: Check if Col A/B are empty or contain cluster/anlage names
+        # Old format: Col A = Title (UPPERCASE), Col B = R&I ID (MS/AG prefix) OR Col A = empty, Col B = empty, Col C = Title
         # New format: Col A = Cluster, Col B = Anlage, Col C = Title, Col D = R&I ID
-        first_row_with_data = next((r for r in all_rows if r), {})
-        col_a_first = first_row_with_data.get(0, '')
-        col_b_first = first_row_with_data.get(1, '')
 
-        # If col_b looks like R&I ID (MS/AG prefix), it's old format
-        is_old_format = col_b_first.startswith('MS') or col_b_first.startswith('AG')
+        # Check first few rows to determine format
+        sample_rows = [r for r in all_rows[:10] if r]
+
+        # Count how many rows have data in columns A and B
+        rows_with_col_a = sum(1 for r in sample_rows if r.get(0, '').strip())
+        rows_with_col_b = sum(1 for r in sample_rows if r.get(1, '').strip())
+
+        # Check if column B contains R&I IDs (MS/AG prefix)
+        col_b_is_ri = any(
+            r.get(1, '').strip().startswith(('MS', 'AG', 'LME', 'TME', 'PME', 'FME'))
+            for r in sample_rows if r.get(1, '').strip()
+        )
+
+        # OLD FORMAT if:
+        # 1. Columns A and B are mostly empty (old structure starts from different column)
+        # 2. OR column B contains R&I IDs
+        is_old_format = (rows_with_col_a < 3 and rows_with_col_b < 3) or col_b_is_ri
 
         if is_old_format:
             # OLD FORMAT: Parse into sections (backward compatibility)
+            # Can have two structures:
+            # 1. Data in cols A-E: Title, R&I, Description, Unit, Variable
+            # 2. Data in cols C-H (A&B empty): Title, R&I, Description, Unit, Variable, Timeline
             sections = []
             current_section = None
+
+            # Detect column offset (0 if A has data, 2 if C has data)
+            first_row = next((r for r in all_rows if r), {})
+            col_offset = 2 if (not first_row.get(0, '').strip() and not first_row.get(1, '').strip()) else 0
 
             for row_dict in all_rows:
                 if not row_dict:
                     continue
 
-                col_a = row_dict.get(0, '')
-                col_b = row_dict.get(1, '')
-                col_c = row_dict.get(2, '')
-                col_d = row_dict.get(3, '')
-                col_e = row_dict.get(4, '')
+                # Read from correct columns based on offset
+                title_col = row_dict.get(0 + col_offset, '').strip()
+                ri_col = row_dict.get(1 + col_offset, '').strip()
+                desc_col = row_dict.get(2 + col_offset, '').strip()
+                unit_col = row_dict.get(3 + col_offset, '').strip()
+                var_col = row_dict.get(4 + col_offset, '').strip()
+                timeline_col = row_dict.get(5 + col_offset, '0').strip() or '0'
 
-                is_title = col_a and col_a.isupper() and not col_a.startswith('MS') and not col_a.startswith('AG')
+                # Title detection: UPPERCASE or contains specific patterns
+                is_title = (title_col and title_col.isupper() and
+                           not any(title_col.startswith(p) for p in ['MS', 'AG', 'LME', 'TME', 'PME', 'FME']))
 
                 if is_title:
                     if current_section:
                         sections.append(current_section)
 
                     current_section = {
-                        'title': col_a,
+                        'title': title_col,
                         'tags': []
                     }
 
-                    if col_b or col_c or col_d or col_e:
+                    # If same row has tag data, add it
+                    if ri_col or desc_col or var_col:
                         current_section['tags'].append({
-                            'ri': col_b,
-                            'description': col_c,
-                            'unit': col_d,
-                            'variable': col_e,
-                            'timeline': '0'
+                            'ri': ri_col,
+                            'description': desc_col,
+                            'unit': unit_col,
+                            'variable': var_col,
+                            'timeline': timeline_col
                         })
                 elif current_section:
-                    if col_b or col_c or col_d or col_e:
+                    # Add tag to current section
+                    if ri_col or desc_col or var_col:
                         current_section['tags'].append({
-                            'ri': col_b,
-                            'description': col_c,
-                            'unit': col_d,
-                            'variable': col_e,
-                            'timeline': '0'
+                            'ri': ri_col,
+                            'description': desc_col,
+                            'unit': unit_col,
+                            'variable': var_col,
+                            'timeline': timeline_col
                         })
 
             if current_section:
@@ -150,40 +175,46 @@ def parse_excel_to_json(excel_path):
                 timeline = row_dict.get(7, '0').strip() or '0'
 
                 # Skip if no useful data
-                if not (cluster_name or anlage_name or title or ri or description or variable):
+                if not (anlage_name or title or ri or description or variable):
                     continue
 
+                # Use default cluster if cluster_name is empty
+                if not cluster_name:
+                    cluster_name = 'CLUSTER 1'
+
+                # Use default anlage if anlage_name is empty
+                if not anlage_name:
+                    anlage_name = 'Default'
+
                 # Create cluster if needed
-                if cluster_name and cluster_name not in clusters:
+                if cluster_name not in clusters:
                     clusters[cluster_name] = {}
-
-                # Use the last non-empty cluster name
-                if cluster_name:
                     current_cluster = cluster_name
-                    current_cluster_dict = clusters[current_cluster]
 
-                    # Create anlage if needed
-                    if anlage_name and anlage_name not in current_cluster_dict:
-                        current_cluster_dict[anlage_name] = {}
+                # Track current cluster
+                current_cluster_dict = clusters[cluster_name]
 
-                    # Use the last non-empty anlage name
-                    if anlage_name:
-                        current_anlage = anlage_name
-                        current_anlage_dict = current_cluster_dict[current_anlage]
+                # Create anlage if needed
+                if anlage_name not in current_cluster_dict:
+                    current_cluster_dict[anlage_name] = {}
+                    current_anlage = anlage_name
 
-                        # Create section if needed
-                        if title and title not in current_anlage_dict:
-                            current_anlage_dict[title] = []
+                # Track current anlage
+                current_anlage_dict = current_cluster_dict[anlage_name]
 
-                        # Add tag
-                        if title and (ri or description or variable):
-                            current_anlage_dict[title].append({
-                                'ri': ri,
-                                'description': description,
-                                'unit': unit,
-                                'variable': variable,
-                                'timeline': timeline
-                            })
+                # Create section if needed
+                if title and title not in current_anlage_dict:
+                    current_anlage_dict[title] = []
+
+                # Add tag
+                if title and (ri or description or variable):
+                    current_anlage_dict[title].append({
+                        'ri': ri,
+                        'description': description,
+                        'unit': unit,
+                        'variable': variable,
+                        'timeline': timeline
+                    })
 
             # Convert dict structure to list structure
             clusters_list = []
