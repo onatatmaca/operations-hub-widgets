@@ -308,12 +308,8 @@
       var section = jsonData.sections[i];
       
       html += '<div class="section">';
-      html += '<div class="section-header title-header" data-level="title">';
-      html += '<h3>' + section.title + '</h3>';
-      html += '</div>';
-      
-      html += '<div class="section-content">';
-      html += '<table>';
+      html += '<div class="section-title">' + section.title + '</div>';
+      html += '<table class="biogas-table">';
       html += '<thead>';
       html += '<tr>';
       html += '<th class="col-ri-id">' + t.riId + '</th>';
@@ -344,7 +340,6 @@
       
       html += '</tbody>';
       html += '</table>';
-      html += '</div>'; // section-content
       html += '</div>'; // section
     }
     
