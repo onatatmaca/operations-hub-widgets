@@ -84,9 +84,11 @@ def parse_excel_to_json(excel_path):
         )
 
         # OLD FORMAT if:
-        # 1. Columns A and B are mostly empty (old structure starts from different column)
-        # 2. OR column B contains R&I IDs
-        is_old_format = (rows_with_col_a < 3 and rows_with_col_b < 3) or col_b_is_ri
+        # 1. Column A (Cluster) is empty - this means no hierarchy, show old way
+        # 2. OR columns A and B are mostly empty (old structure starts from different column)
+        # 3. OR column B contains R&I IDs
+        col_a_is_empty = rows_with_col_a < 3
+        is_old_format = col_a_is_empty or (rows_with_col_a < 3 and rows_with_col_b < 3) or col_b_is_ri
 
         if is_old_format:
             # OLD FORMAT: Parse into sections (backward compatibility)
@@ -96,9 +98,16 @@ def parse_excel_to_json(excel_path):
             sections = []
             current_section = None
 
-            # Detect column offset (0 if A has data, 2 if C has data)
+            # Detect column offset based on where title data starts
+            # If Column A is empty but B has data, titles are in Column C → offset = 2
+            # If both A and B are empty, titles might be in Column C → offset = 2
+            # If Column A has data, titles are in Column A → offset = 0
             first_row = next((r for r in all_rows if r), {})
-            col_offset = 2 if (not first_row.get(0, '').strip() and not first_row.get(1, '').strip()) else 0
+            if col_a_is_empty:
+                # Column A is empty, so data starts from Column C
+                col_offset = 2
+            else:
+                col_offset = 0
 
             for row_dict in all_rows:
                 if not row_dict:
@@ -112,38 +121,31 @@ def parse_excel_to_json(excel_path):
                 var_col = row_dict.get(4 + col_offset, '').strip()
                 timeline_col = row_dict.get(5 + col_offset, '0').strip() or '0'
 
-                # Title detection: UPPERCASE or contains specific patterns
-                is_title = (title_col and title_col.isupper() and
-                           not any(title_col.startswith(p) for p in ['MS', 'AG', 'LME', 'TME', 'PME', 'FME']))
+                # Check if this is a new section (title changed)
+                is_new_section = (title_col and title_col.isupper() and
+                                 not any(title_col.startswith(p) for p in ['MS', 'AG', 'LME', 'TME', 'PME', 'FME']) and
+                                 (not current_section or current_section['title'] != title_col))
 
-                if is_title:
+                if is_new_section:
+                    # Save previous section
                     if current_section:
                         sections.append(current_section)
 
+                    # Start new section
                     current_section = {
                         'title': title_col,
                         'tags': []
                     }
 
-                    # If same row has tag data, add it
-                    if ri_col or desc_col or var_col:
-                        current_section['tags'].append({
-                            'ri': ri_col,
-                            'description': desc_col,
-                            'unit': unit_col,
-                            'variable': var_col,
-                            'timeline': timeline_col
-                        })
-                elif current_section:
-                    # Add tag to current section
-                    if ri_col or desc_col or var_col:
-                        current_section['tags'].append({
-                            'ri': ri_col,
-                            'description': desc_col,
-                            'unit': unit_col,
-                            'variable': var_col,
-                            'timeline': timeline_col
-                        })
+                # Add tag to current section
+                if current_section and (ri_col or desc_col or var_col):
+                    current_section['tags'].append({
+                        'ri': ri_col,
+                        'description': desc_col,
+                        'unit': unit_col,
+                        'variable': var_col,
+                        'timeline': timeline_col
+                    })
 
             if current_section:
                 sections.append(current_section)
