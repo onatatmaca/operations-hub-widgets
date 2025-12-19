@@ -268,6 +268,256 @@
     return html;
   };
 
+
+  // ========== PHASE 2: DYNAMIC JSON LOADING AND HTML GENERATION ==========
+
+  // Get BGA name from widget configuration
+  var bgaName = data.bgaName || 'Erfstadt_v1';
+  var bgaData = null; // Will hold loaded JSON data
+
+  // Function to load BGA configuration JSON
+  var loadBGAConfiguration = function(callback) {
+    console.log('[BIOGAS] Loading configuration for:', bgaName);
+    
+    var jsonPath = '/custom/default/BiogasDisplay/datasets/' + bgaName + '.json';
+    
+    // Use jQuery AJAX for ES5 compatibility
+    $.ajax({
+      url: jsonPath,
+      dataType: 'json',
+      success: function(data) {
+        console.log('[BIOGAS] Configuration loaded successfully');
+        bgaData = data;
+        callback(null, data);
+      },
+      error: function(xhr, status, error) {
+        console.error('[BIOGAS] Failed to load configuration:', error);
+        callback(error, null);
+      }
+    });
+  };
+
+  // Function to build HTML for old format (sections)
+  var buildFlatUI = function(jsonData) {
+    console.log('[BIOGAS] Building flat UI (old format)');
+    
+    var html = '';
+    
+    // Build each section
+    for (var i = 0; i < jsonData.sections.length; i++) {
+      var section = jsonData.sections[i];
+      
+      html += '<div class="section">';
+      html += '<div class="section-header title-header" data-level="title">';
+      html += '<h3>' + section.title + '</h3>';
+      html += '</div>';
+      
+      html += '<div class="section-content">';
+      html += '<table>';
+      html += '<thead>';
+      html += '<tr>';
+      html += '<th class="col-ri-id">' + t.riId + '</th>';
+      html += '<th class="col-description">' + t.description + '</th>';
+      html += '<th class="col-value">' + t.value + '</th>';
+      html += '<th class="col-historian-tag">' + t.historianTag + '</th>';
+      html += '</tr>';
+      html += '</thead>';
+      html += '<tbody>';
+      
+      // Build rows for each tag
+      for (var j = 0; j < section.tags.length; j++) {
+        var tag = section.tags[j];
+        var timeline = tag.timeline || '0';
+        
+        html += '<tr data-tag="' + tag.variable + '" data-timeline="' + timeline + '">';
+        html += '<td class="ri-id">' + (tag.ri || '') + '</td>';
+        html += '<td class="description">' + (tag.description || '') + '</td>';
+        html += '<td class="value">--<span class="unit">' + (tag.unit || '') + '</span></td>';
+        html += '<td class="historian-tag">' + tag.variable + '</td>';
+        html += '</tr>';
+        
+        // Store tag metadata
+        if (tag.variable) {
+          tagUnits[tag.variable] = tag.unit || '';
+        }
+      }
+      
+      html += '</tbody>';
+      html += '</table>';
+      html += '</div>'; // section-content
+      html += '</div>'; // section
+    }
+    
+    return html;
+  };
+
+  // Function to build HTML for new format (hierarchical clusters)
+  var buildHierarchicalUI = function(jsonData) {
+    console.log('[BIOGAS] Building hierarchical UI (new format)');
+    
+    var html = '';
+    
+    // Add control buttons
+    html += '<div class="hierarchy-controls">';
+    html += '<button class="control-btn expand-all-btn">' + t.expandAll + '</button>';
+    html += '<button class="control-btn collapse-all-btn">' + t.collapseAll + '</button>';
+    html += '</div>';
+    
+    // Build each cluster
+    for (var c = 0; c < jsonData.clusters.length; c++) {
+      var cluster = jsonData.clusters[c];
+      
+      html += '<div class="cluster">';
+      html += '<div class="section-header cluster-header" data-level="cluster">';
+      html += '<h2><span class="collapse-icon">▼</span> ' + cluster.name + '</h2>';
+      html += '</div>';
+      
+      html += '<div class="section-content cluster-content">';
+      
+      // Build each anlage within cluster
+      for (var a = 0; a < cluster.anlagen.length; a++) {
+        var anlage = cluster.anlagen[a];
+        
+        html += '<div class="anlage">';
+        html += '<div class="section-header anlage-header collapsed" data-level="anlage">';
+        html += '<h3><span class="collapse-icon">▶</span> ' + anlage.name + '</h3>';
+        html += '</div>';
+        
+        html += '<div class="section-content anlage-content collapsed">';
+        
+        // Build each section within anlage
+        for (var s = 0; s < anlage.sections.length; s++) {
+          var section = anlage.sections[s];
+          
+          html += '<div class="section">';
+          html += '<div class="section-header title-header" data-level="title">';
+          html += '<h4><span class="collapse-icon">▼</span> ' + section.title + '</h4>';
+          html += '</div>';
+          
+          html += '<div class="section-content title-content">';
+          html += '<table>';
+          html += '<thead>';
+          html += '<tr>';
+          html += '<th class="col-ri-id">' + t.riId + '</th>';
+          html += '<th class="col-description">' + t.description + '</th>';
+          html += '<th class="col-value">' + t.value + '</th>';
+          html += '<th class="col-historian-tag">' + t.historianTag + '</th>';
+          html += '</tr>';
+          html += '</thead>';
+          html += '<tbody>';
+          
+          // Build rows for each tag
+          for (var j = 0; j < section.tags.length; j++) {
+            var tag = section.tags[j];
+            var timeline = tag.timeline || '0';
+            
+            html += '<tr data-tag="' + tag.variable + '" data-timeline="' + timeline + '">';
+            html += '<td class="ri-id">' + (tag.ri || '') + '</td>';
+            html += '<td class="description">' + (tag.description || '') + '</td>';
+            html += '<td class="value">--<span class="unit">' + (tag.unit || '') + '</span></td>';
+            html += '<td class="historian-tag">' + tag.variable + '</td>';
+            html += '</tr>';
+            
+            // Store tag metadata
+            if (tag.variable) {
+              tagUnits[tag.variable] = tag.unit || '';
+            }
+          }
+          
+          html += '</tbody>';
+          html += '</table>';
+          html += '</div>'; // title-content
+          html += '</div>'; // section
+        }
+        
+        html += '</div>'; // anlage-content
+        html += '</div>'; // anlage
+      }
+      
+      html += '</div>'; // cluster-content
+      html += '</div>'; // cluster
+    }
+    
+    return html;
+  };
+
+  // Function to add collapse/expand handlers
+  var addCollapseExpandHandlers = function() {
+    console.log('[BIOGAS] Adding collapse/expand handlers');
+    
+    // Handle section header clicks
+    element.on('click', '.section-header', function(e) {
+      e.stopPropagation();
+      
+      var header = $(this);
+      var content = header.next('.section-content');
+      var icon = header.find('.collapse-icon');
+      
+      // Toggle collapsed state
+      header.toggleClass('collapsed');
+      content.toggleClass('collapsed');
+      
+      // Update icon
+      if (header.hasClass('collapsed')) {
+        icon.text('▶');
+      } else {
+        icon.text('▼');
+      }
+    });
+    
+    // Handle "Expand All" button
+    element.on('click', '.expand-all-btn', function() {
+      element.find('.section-header').removeClass('collapsed');
+      element.find('.section-content').removeClass('collapsed');
+      element.find('.collapse-icon').text('▼');
+    });
+    
+    // Handle "Collapse All" button
+    element.on('click', '.collapse-all-btn', function() {
+      element.find('.section-header').addClass('collapsed');
+      element.find('.section-content').addClass('collapsed');
+      element.find('.collapse-icon').text('▶');
+    });
+  };
+
+  // Function to build complete dynamic UI
+  var buildDynamicHTML = function(jsonData) {
+    console.log('[BIOGAS] Building dynamic HTML');
+    
+    var mainContent = '';
+    
+    // Detect format
+    if (jsonData.clusters) {
+      // New hierarchical format
+      mainContent = buildHierarchicalUI(jsonData);
+    } else if (jsonData.sections) {
+      // Old flat format
+      mainContent = buildFlatUI(jsonData);
+    } else {
+      console.error('[BIOGAS] Unknown JSON format');
+      return;
+    }
+    
+    // Inject HTML into main container
+    var container = element.find('#dataContainer');
+    if (container.length === 0) {
+      // Create container if it doesn't exist
+      container = $('<div id="dataContainer"></div>');
+      element.find('.biogas-container').append(container);
+    }
+    
+    container.html(mainContent);
+    
+    // Add collapse/expand handlers if hierarchical
+    if (jsonData.clusters) {
+      addCollapseExpandHandlers();
+    }
+    
+    console.log('[BIOGAS] Dynamic HTML built successfully');
+  };
+
+  // ========== END PHASE 2 ==========
+
   var updateTagValue = function(tagName, value, quality) {
     console.log('[BIOGAS] Updating tag:', tagName, '=', value);
     
@@ -284,15 +534,23 @@
       return;
     }
 
+    var timeline = row.attr('data-timeline') || '0';
     var valueCell = row.find('.value');
-    var unit = tagUnits[tagName] || '';
     
-    // CRITICAL: Ensure proper rounding to 1 decimal
-    var numValue = typeof value === 'number' ? value : parseFloat(value);
-    var formatted = isNaN(numValue) ? '--' : numValue.toFixed(1);
-
-    valueCell.html(formatted + '<span class="unit">' + unit + '</span>');
+    // Check if this tag should show timeline widget
+    if (timeline === '1') {
+      // Show timeline widget instead of value
+      var timelineHTML = createTimelineWidget(tagName, historicalCache[tagName]);
+      valueCell.html(timelineHTML);
+    } else {
+      // Show normal value
+      var unit = tagUnits[tagName] || '';
+      var numValue = typeof value === 'number' ? value : parseFloat(value);
+      var formatted = isNaN(numValue) ? '--' : numValue.toFixed(1);
+      valueCell.html(formatted + '<span class="unit">' + unit + '</span>');
+    }
     
+    // Handle quality
     if (quality && quality !== 'Good' && quality !== 'good') {
       valueCell.addClass('offline');
     } else {
@@ -760,63 +1018,86 @@
     console.log('[BIOGAS] WARNING: No live data source configured!');
   }
 
-  // Initialize UI labels
-  initializeLabels();
+  // Initialize UI by loading JSON configuration and building HTML dynamically
+  console.log('[BIOGAS] Initializing widget with bgaName:', bgaName);
 
-  // Subscribe to live data (Historian or OPC UA)
-  if (liveDataSource) {
-    console.log('[BIOGAS] Subscribing to live data (' + liveDataType + ')');
+  loadBGAConfiguration(function(error, jsonData) {
+    if (error) {
+      console.error('[BIOGAS] Failed to load configuration, widget cannot initialize');
+      element.find('.biogas-container').html('<div style="color: red; padding: 20px;">Error loading configuration: ' + bgaName + '.json not found</div>');
+      return;
+    }
 
-    EMBED.subscribeFieldToQueryChange(liveDataSource, function(rows) {
-      console.log('[BIOGAS] Live data received from ' + liveDataType + ':', rows.length, 'rows');
-      processQueryData(rows);
-    });
+    // Build dynamic HTML from JSON
+    buildDynamicHTML(jsonData);
 
-    console.log('[BIOGAS] Live data subscription active');
-  }
+    // Initialize UI labels (translations)
+    initializeLabels();
 
-  // Subscribe to historical data if available
-  if (historicalData && EMBED.fieldTypeIsQuery(historicalData)) {
-    console.log('[BIOGAS] Historical data query detected - subscribing');
+    // Subscribe to live data (Historian or OPC UA)
+    if (liveDataSource) {
+      console.log('[BIOGAS] Subscribing to live data (' + liveDataType + ')');
 
-    EMBED.subscribeFieldToQueryChange(historicalData, function(rows) {
-      console.log('[BIOGAS] Historical data received:', rows.length, 'rows');
-
-      // Clear previous cache
-      historicalCache = {};
-
-      // Organize historical data by tag name
-      rows.forEach(function(row) {
-        var tagName = row.Name || row.name;
-        var value = row.Value || row.value;
-        var timestamp = row.Timestamp || row.timestamp;
-
-        if (tagName && value !== undefined && value !== null && timestamp) {
-          if (!historicalCache[tagName]) {
-            historicalCache[tagName] = [];
-          }
-
-          historicalCache[tagName].push({
-            time: new Date(timestamp),
-            value: parseFloat(value)
-          });
-        }
+      EMBED.subscribeFieldToQueryChange(liveDataSource, function(rows) {
+        console.log('[BIOGAS] Live data received from ' + liveDataType + ':', rows.length, 'rows');
+        processQueryData(rows);
       });
 
-      // Sort each tag's historical data by time
-      for (var tagName in historicalCache) {
-        historicalCache[tagName].sort(function(a, b) {
-          return a.time - b.time;
+      console.log('[BIOGAS] Live data subscription active');
+    }
+
+    // Subscribe to historical data if available
+    if (historicalData && EMBED.fieldTypeIsQuery(historicalData)) {
+      console.log('[BIOGAS] Historical data query detected - subscribing');
+
+      EMBED.subscribeFieldToQueryChange(historicalData, function(rows) {
+        console.log('[BIOGAS] Historical data received:', rows.length, 'rows');
+
+        // Clear previous cache
+        historicalCache = {};
+
+        // Organize historical data by tag name
+        rows.forEach(function(row) {
+          var tagName = row.Name || row.name;
+          var value = row.Value || row.value;
+          var timestamp = row.Timestamp || row.timestamp;
+
+          if (tagName && value !== undefined && value !== null && timestamp) {
+            if (!historicalCache[tagName]) {
+              historicalCache[tagName] = [];
+            }
+
+            historicalCache[tagName].push({
+              time: new Date(timestamp),
+              value: parseFloat(value)
+            });
+          }
         });
-      }
 
-      console.log('[BIOGAS] Historical cache built for', Object.keys(historicalCache).length, 'tags');
-    });
+        // Sort each tag's historical data by time
+        for (var tagName in historicalCache) {
+          historicalCache[tagName].sort(function(a, b) {
+            return a.time - b.time;
+          });
+        }
 
-    console.log('[BIOGAS] Historical data subscription active');
-  } else {
-    console.log('[BIOGAS] No historical data query configured - will use simulated data');
-  }
+        console.log('[BIOGAS] Historical cache built for', Object.keys(historicalCache).length, 'tags');
 
-  console.log('[BIOGAS] Plugin initialized successfully');
+        // Update timeline widgets with historical data
+        element.find('tr[data-timeline="1"]').each(function() {
+          var row = $(this);
+          var tagName = row.attr('data-tag');
+          var valueCell = row.find('.value');
+          var timelineHTML = createTimelineWidget(tagName, historicalCache[tagName]);
+          valueCell.html(timelineHTML);
+        });
+      });
+
+      console.log('[BIOGAS] Historical data subscription active');
+    } else {
+      console.log('[BIOGAS] No historical data query configured - will use simulated data');
+    }
+
+    console.log('[BIOGAS] Plugin initialized successfully with dynamic HTML');
+  });
 })();
