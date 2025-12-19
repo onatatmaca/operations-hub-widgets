@@ -482,31 +482,47 @@
 
   // Function to build complete dynamic UI
   var buildDynamicHTML = function(jsonData) {
-    console.log('[BIOGAS] Building dynamic HTML');
+    console.log('[BIOGAS] ===== Building dynamic HTML =====');
+    console.log('[BIOGAS] JSON data:', jsonData);
     
     var mainContent = '';
     
     // Detect format
     if (jsonData.clusters) {
-      // New hierarchical format
+      console.log('[BIOGAS] Detected NEW hierarchical format with', jsonData.clusters.length, 'clusters');
       mainContent = buildHierarchicalUI(jsonData);
     } else if (jsonData.sections) {
-      // Old flat format
+      console.log('[BIOGAS] Detected OLD flat format with', jsonData.sections.length, 'sections');
       mainContent = buildFlatUI(jsonData);
     } else {
-      console.error('[BIOGAS] Unknown JSON format');
+      console.error('[BIOGAS] Unknown JSON format - no clusters or sections found!');
+      console.error('[BIOGAS] JSON keys:', Object.keys(jsonData));
       return;
     }
     
+    console.log('[BIOGAS] Generated HTML length:', mainContent.length, 'characters');
+    console.log('[BIOGAS] HTML preview (first 500 chars):', mainContent.substring(0, 500));
+    
     // Inject HTML into main container
     var container = element.find('#dataContainer');
+    console.log('[BIOGAS] Found dataContainer:', container.length > 0 ? 'YES' : 'NO');
+    
     if (container.length === 0) {
-      // Create container if it doesn't exist
+      console.log('[BIOGAS] dataContainer not found, creating it');
       container = $('<div id="dataContainer"></div>');
-      element.find('.biogas-container').append(container);
+      var biogasContainer = element.find('.biogas-container');
+      console.log('[BIOGAS] Found biogas-container:', biogasContainer.length > 0 ? 'YES' : 'NO');
+      if (biogasContainer.length > 0) {
+        biogasContainer.append(container);
+      } else {
+        console.error('[BIOGAS] ERROR: biogas-container not found! Appending to element directly');
+        element.append(container);
+      }
     }
     
+    console.log('[BIOGAS] Injecting HTML into container...');
     container.html(mainContent);
+    console.log('[BIOGAS] Container now has', container.children().length, 'child elements');
     
     // Add collapse/expand handlers if hierarchical
     if (jsonData.clusters) {
